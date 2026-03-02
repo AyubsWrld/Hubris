@@ -1,8 +1,14 @@
 [
 {
   "directory": "/root/projects/Hubris/Build",
-  "command": "/usr/sbin/c++   -std=c++23 -o CMakeFiles/Hubris.dir/Source/main.cpp.o -c /root/projects/Hubris/Source/main.cpp",
+  "command": "/usr/sbin/c++  -I/root/projects/Hubris/Utils -I/root/projects/Hubris/Source/AST/Public -I/root/projects/Hubris/Source/AST/{CMAKE_SOURCE_DIR}/Utils -I/root/projects/Hubris/Source/Parser/Public -std=c++23 -o CMakeFiles/Hubris.dir/Source/main.cpp.o -c /root/projects/Hubris/Source/main.cpp",
   "file": "/root/projects/Hubris/Source/main.cpp",
   "output": "CMakeFiles/Hubris.dir/Source/main.cpp.o"
+},
+{
+  "directory": "/root/projects/Hubris/Build",
+  "command": "/usr/sbin/c++  -I/root/projects/Hubris/Utils -I/root/projects/Hubris/Source/AST/Public -I/root/projects/Hubris/Source/AST/{CMAKE_SOURCE_DIR}/Utils -I/root/projects/Hubris/Source/Parser/Public -std=c++23 -o CMakeFiles/Hubris.dir/Source/Parser/Private/ParseError.cpp.o -c /root/projects/Hubris/Source/Parser/Private/ParseError.cpp",
+  "file": "/root/projects/Hubris/Source/Parser/Private/ParseError.cpp",
+  "output": "CMakeFiles/Hubris.dir/Source/Parser/Private/ParseError.cpp.o"
 }
 ]

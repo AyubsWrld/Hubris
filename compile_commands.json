@@ -1,0 +1,8 @@
+[
+{
+  "directory": "/root/projects/Hubris/Build",
+  "command": "/usr/sbin/c++   -std=c++23 -o CMakeFiles/Hubris.dir/Source/main.cpp.o -c /root/projects/Hubris/Source/main.cpp",
+  "file": "/root/projects/Hubris/Source/main.cpp",
+  "output": "CMakeFiles/Hubris.dir/Source/main.cpp.o"
+}
+]

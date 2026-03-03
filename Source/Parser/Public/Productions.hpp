@@ -3,6 +3,7 @@
 #include "SourceLocation.hpp"
 #include <optional>
 #include <type_traits>
+#include <concepts>
 
 // How to better model this representation
 
@@ -20,6 +21,70 @@ enum class ECommentType
     CommentBlock,
     CommentLine,
     _MAX_
+};
+
+enum class EAssignmentOperator
+{
+    Assign,                     // =
+    AddAssign,                  // +=
+    SubtractAssign,             // -=
+    MultiplyAssign,             // *=
+    DivideAssign,               // /=
+    ModuloAssign,               // %=
+    LeftShiftAssign,            // <<=
+    RightShiftAssign,           // >>=
+    UnsignedRightShiftAssign,   // >>>=
+    BitwiseOrAssign,            // |=
+    BitwiseXorAssign,           // ^=
+    BitwiseAndAssign,           // &=
+    LogicalAndAssign,           // &&=
+    LogicalOrAssign,            // ||=
+    NullishCoalescingAssign     // ??=
+};
+
+enum class EUnaryOperator
+{
+    Subraction,     // -
+    Addition,       // +
+    LogicalNot,     // !
+    BitwiseNot,     // ~
+    TypeOf,         // typeof
+    Void,           // void
+    Delete,         // delete
+    Throw,          // throw
+    _MAX_
+};
+
+enum class EBinaryOperator
+{
+    Equal,                  // ==
+    NotEqual,               // !=
+    StrictEqual,            // ===
+    StrictNotEqual,         // !==
+    LessThan,               // <
+    LessThanOrEqual,        // <=
+    GreaterThan,            // >
+    GreaterThanOrEqual,     // >=
+    LeftShift,              // <<
+    RightShift,             // >>
+    UnsignedRightShift,     // >>>
+    Addition,               // +
+    Subtraction,            // -
+    Multiplication,         // *
+    Division,               // /
+    Modulo,                 // %
+    BitwiseOr,              // |
+    BitwiseXor,             // ^
+    BitwiseAnd,             // &
+    In,                     // in
+    InstanceOf,             // instanceof
+    _MAX_
+};
+
+enum class EUpdateOperator
+{
+    Increment,  // ++
+    Decrement   // --
 };
 
 struct FComment
@@ -63,12 +128,38 @@ struct NodeBase
     const   Comments        LeadingComments;
     const   Comments        TrailingComments;
     const   Comments        Innercomments;
-
     const   std::optional<void*> Extras; // reasoning?
 };
 
-/*
 
+/* These should be concepts */
+union UExpression 
+{
+
+};
+
+union UPattern
+{
+
+};
+
+union UDeclaration
+{
+
+};
+
+union ULiteral
+{
+
+};
+
+union UFunction
+{
+
+};
+
+
+/*
 type NodeAny<T extends string, KnownProps = object> = NodeBase & {
   type: T;
   [key: string]: any;

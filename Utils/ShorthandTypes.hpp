@@ -22,3 +22,5 @@ using   I64     =   std::int64_t;
 using   F32     =   float;
 using   F64     =   double;
 
+
+using   NumericRange    =   std::pair<U64, U64>;

@@ -9,7 +9,6 @@
 
 
 using   Comments        =   std::vector<std::string>;
-using   NumericRange    =   std::pair<U64, U64>;
 
 void Test() { std::print("Hello\n"); }
 

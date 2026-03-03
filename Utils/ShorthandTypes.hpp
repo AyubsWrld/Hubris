@@ -8,6 +8,7 @@
 #define NODISCARD [[nodiscard("The result of this expression should not be ignored.")]]
 #endif
 
+using   FString =   std::string;
 using   U8      =   std::uint8_t;
 using   U16     =   std::uint16_t;
 using   U32     =   std::uint32_t;

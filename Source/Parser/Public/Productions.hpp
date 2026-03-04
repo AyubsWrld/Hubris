@@ -21,6 +21,16 @@ enum class ECommentType
     _MAX_
 };
 
+enum class EVariableDeclQualifier 
+{
+    Var,                        // "var"
+    Let,                        // "var"
+    Const,                      // "var"
+    Using,                      // "var"
+    Await_Using,                // "var"
+    _MAX_
+};
+
 enum class EAssignmentOperator
 {
     Assign,                     // =
@@ -37,7 +47,8 @@ enum class EAssignmentOperator
     BitwiseAndAssign,           // &=
     LogicalAndAssign,           // &&=
     LogicalOrAssign,            // ||=
-    NullishCoalescingAssign     // ??=
+    NullishCoalescingAssign,    // ??=
+    _MAX_
 };
 
 enum class EUnaryOperator
@@ -297,20 +308,68 @@ struct FForInStatement : public FStatement
     bool bIsAsync;
 };
 
-struct FForStatement : public FStatement 
+struct FVariableDeclaration : public FStatement 
 {
-    FExpression     Test; // (expr) condition.
-    FStatement      Body; // { ... }
+    FIdentifier             Identifier; // Identifier name;
+    EVariableDeclQualifier  Kind;       // Qualifier: ("var" || "let" || "const" || "using" || "await using");
 };
 
-struct FunctionDeclaration;
-struct IfStatement;
-struct LabeledStatement;
-struct ReturnStatement;
-struct SwitchStatement;
+struct FForStatement : public FStatement 
+{
+    // for (expr; expr; expr) stmt
+    union UInit
+    {
+        FExpression             Expression;
+        FVariableDeclaration    Decl;
+    };
+
+    std::optional<UInit>    Init; // Init statement (expr; expr; expr)
+    FExpression             Test; // (expr) condition.
+    FExpression             Update;
+    FStatement              Body; // { ... }
+};
+
+
+struct FFunctionDeclaration : public FStatement 
+{
+    FIdentifier Identifier;
+};
+
+struct FIfStatement : public FStatement 
+{
+    // if (expr) stmt; else stmt (optional)
+    FExpression                     Test;       // (expr)
+    FStatement                      Consequent; // stmt
+    std::optional<FStatement>       Alternate; // stmt
+};
+
+struct FLabeledStatement : public FStatement 
+{
+    FIdentifier     Label; 
+    FStatement      Body;
+};
+
+struct FReturnStatement : public FStatement
+{
+    FExpression Argument; 
+};
+
+struct FSwitchCase : public FNodeBase 
+{ 
+    // ( Test ) stmt...
+    std::optional<FExpression>  Test;
+    std::vector<FStatement>     Consequent;
+};
+
+struct SwitchStatement : public FStatement 
+{
+    // switch (discriminant) { ... cases ... }
+    FExpression Discriminant; 
+    std::vector<FSwitchCase> Cases;
+};
+
 struct ThrowStatement;
 struct TryStatement;
-struct VariableDeclaration;
 struct WhileStatement;
 struct WithStatement;
 struct ClassDeclaration;

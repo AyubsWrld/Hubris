@@ -17,7 +17,7 @@ export type Statement =
   | DoWhileStatement        // Integrated.
   | EmptyStatement          // Integrated.
   | ExpressionStatement     // Integrated, Needs work.
-  | ForInStatement
+  | ForInStatement          // Integrated
   | ForStatement
   | FunctionDeclaration
   | IfStatement
@@ -26,7 +26,7 @@ export type Statement =
   | SwitchStatement
   | ThrowStatement
   | TryStatement
-  | VariableDeclaration
+  | VariableDeclaration     // Integrated.
   | WhileStatement
   | WithStatement
   | ClassDeclaration

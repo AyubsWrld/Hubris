@@ -136,6 +136,53 @@ struct FNodeBase
 
 /* --------------------------------------------------------------[ @Nodebase ]-------------------------------------------------------------------- */
 
+/* --------------------------------------------------------------[ @Literal ]-------------------------------------------------------------------- */
+
+struct FLiteral : public FNodeBase { };
+
+template<typename T>
+constexpr bool IsLiteral = std::is_base_of_v<FLiteral, T>;
+
+template<typename T>
+concept Literal = requires(T a){ IsLiteral<T>; };
+
+struct FRegExpLiteral : public FLiteral 
+{ 
+    std::string Pattern;
+};
+
+struct FNullLiteral : public FLiteral {  };
+
+struct FStringLiteral : public FLiteral 
+{ 
+    std::string Value;
+};
+
+struct FBooleanLiteral : public FLiteral 
+{ 
+    bool bValue;
+};
+
+struct FNumericLiteral : public FLiteral 
+{ 
+    union 
+    {
+        double  FloatingPointValue;
+        I64     IntegralValue;
+    } Value;
+};
+
+// FIXME: using 2 64 bit integers to represent 2^128. 
+// Right now it's more like a fixed-width 128-bit integer. see C _int128
+struct FBigIntLiteral : public FLiteral 
+{ 
+    U64 High;   // Uppers 64bits
+    U64 Low;    // Lower 64bits
+};
+
+/* --------------------------------------------------------------[ @Literal ]-------------------------------------------------------------------- */
+
+
 /* --------------------------------------------------------------[ @Identifier ]-------------------------------------------------------------------- */ 
 
 /* 
@@ -145,6 +192,39 @@ struct FNodeBase
 /* --------------------------------------------------------------[ @Identifier ]-------------------------------------------------------------------- */ 
 
 /* --------------------------------------------------------------[ @Expressions ]-------------------------------------------------------------------- */
+
+
+/* Facilitates the type traits below, does not however implement anything */ 
+
+struct FExpression : public FNodeBase { };
+
+template<typename T>
+constexpr bool IsExpression = std::is_base_of_v<FExpression, T>;
+
+template<typename T>
+concept Expression = requires(T a){ IsExpression<T>; };
+
+
+struct FArrayExpression  : public FExpression
+{
+    std::vector<FExpression> Elements;
+};
+
+struct FDoExpression : public FExpression
+{
+    bool bIsAsync; 
+};
+
+struct FObjectExpression : public FExpression
+{
+
+};
+
+struct FIdentifier : public FNodeBase 
+{
+    std::string     Name; 
+    bool            bIsOptional;
+};
 
 struct FAssignmentExpression;
 struct FBinaryExpression;
@@ -194,39 +274,15 @@ struct FTsNonNullExpression;
 struct FEstreeChainExpression;
 struct FEstreeLiteral;
 
-/* Facilitates the type traits below, does not however implement anything */ 
-
-struct FExpression : public FNodeBase { };
-
-template<typename T>
-constexpr bool IsExpression = std::is_base_of_v<FExpression, T>;
-
-template<typename T>
-concept Expression = requires(T a){ IsExpression<T>; };
-
-
-struct FArrayExpression  : public FExpression
-{
-    std::vector<FExpression> Elements;
-};
-
-struct FDoExpression : public FExpression
-{
-    bool bIsAsync; 
-};
-
-struct FObjectExpression : public FExpression
-{
-
-};
-
-struct FIdentifier : public FNodeBase 
-{
-    std::string     Name; 
-    bool            bIsOptional;
-};
-
 /* --------------------------------------------------------------[ @Expressions ]-------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------[ @HasDecorators ]-------------------------------------------------------------------- */
+
+struct FDecorator : public FNodeBase 
+{
+    FExpression Expression;
+};
+/* --------------------------------------------------------------[ @HasDecorators ]-------------------------------------------------------------------- */
 
 /* --------------------------------------------------------------[ @Directives ]-------------------------------------------------------------------- */
 /*
@@ -272,133 +328,165 @@ concept Statement = requires(T a){ IsStatment<T>; };
 /* @under-constuction */
 struct FBlockStatement : public FStatement
 {
-    std::vector<FStatement> Body;
-    std::vector<FDirective> Label;
+    std::vector<FStatement> Body;   // { stmt; stmt; }
+    std::vector<FDirective> Label;  // "use strict"
 };
 
 struct FBreakStatement : public FStatement
 {
-    std::optional<FIdentifier> Label;
+    std::optional<FIdentifier> Label; // break; / break label;
 };
 
 struct FContinueStatement : public FStatement 
 {
-    std::optional<FIdentifier> Label;
+    std::optional<FIdentifier> Label; // continue; / continue label;
 };
 
-struct FDebuggerStatement : public FStatement {  };
+struct FDebuggerStatement : public FStatement { }; // debugger;
 
 struct FDoWhileStatement : public FStatement 
 {
-    FStatement  Body;   // { ... } 
-    FExpression Test;   // (expr) condition.
+    FStatement  Body; // do { ... }
+    FExpression Test; // while (x > 0)
 };
 
-struct FEmptyStatement : public FStatement {  };
+struct FEmptyStatement : public FStatement { }; // ;
 
 struct FExpressionStatement : public FStatement 
 {
-    FExpression Expression; 
-    std::optional<FDirective> Directive;  // for estree
+    FExpression                 Expression; // foo()
+    std::optional<FDirective>   Directive;  // "use strict"
 };
 
 struct FForInStatement : public FStatement 
 {
-    //FIXME: "Shouldn't be here, but have to declare it because it's assigned to a ForInOf unconditionally."
-    bool bIsAsync;
+    bool bIsAsync; // for (x in obj) / for await (x in obj)
 };
 
 struct FVariableDeclaration : public FStatement 
 {
-    FIdentifier             Identifier; // Identifier name;
-    EVariableDeclQualifier  Kind;       // Qualifier: ("var" || "let" || "const" || "using" || "await using");
+    FIdentifier             Identifier; // x
+    EVariableDeclQualifier  Kind;       // var / let / const / using / await using
 };
 
 struct FForStatement : public FStatement 
 {
-    // for (expr; expr; expr) stmt
+    // for (let i = 0; i < n; i++) { ... }
     union UInit
     {
-        FExpression             Expression;
-        FVariableDeclaration    Decl;
+        FExpression             Expression; // i = 0
+        FVariableDeclaration    Decl;       // let i = 0
     };
-
-    std::optional<UInit>    Init; // Init statement (expr; expr; expr)
-    FExpression             Test; // (expr) condition.
-    FExpression             Update;
-    FStatement              Body; // { ... }
+    std::optional<UInit>    Init;   // let i = 0
+    FExpression             Test;   // i < n
+    FExpression             Update; // i++
+    FStatement              Body;   // { ... }
 };
-
 
 struct FFunctionDeclaration : public FStatement 
 {
-    FIdentifier Identifier;
+    FIdentifier Identifier; // function foo() { ... }
 };
 
 struct FIfStatement : public FStatement 
 {
-    // if (expr) stmt; else stmt (optional)
-    FExpression                     Test;       // (expr)
-    FStatement                      Consequent; // stmt
-    std::optional<FStatement>       Alternate; // stmt
+    // if (x > 0) { ... } else { ... }
+    FExpression                 Test;       // x > 0
+    FStatement                  Consequent; // { ... }
+    std::optional<FStatement>   Alternate;  // else { ... }
 };
 
 struct FLabeledStatement : public FStatement 
 {
-    FIdentifier     Label; 
-    FStatement      Body;
+    FIdentifier Label; // outer:
+    FStatement  Body;  // while (...) { break outer; }
 };
 
 struct FReturnStatement : public FStatement
 {
-    FExpression Argument; 
+    FExpression Argument; // return x
 };
 
 struct FSwitchCase : public FNodeBase 
-{ 
-    // ( Test ) stmt...
-    std::optional<FExpression>  Test;
-    std::vector<FStatement>     Consequent;
-};
-
-struct SwitchStatement : public FStatement 
 {
-    // switch (discriminant) { ... cases ... }
-    FExpression Discriminant; 
-    std::vector<FSwitchCase> Cases;
+    // case 1: ... / default: ...
+    std::optional<FExpression>  Test;       // 1  (nullopt = default)
+    std::vector<FStatement>     Consequent; // stmt; ...
 };
 
-struct ThrowStatement;
-struct TryStatement;
-struct WhileStatement;
-struct WithStatement;
-struct ClassDeclaration;
-struct ExportAllDeclaration;
-struct ExportDefaultDeclaration;
-struct ExportNamedDeclaration;
-struct ForOfStatement;
-struct ImportDeclaration;
-struct FlowDeclareClass;
-struct FlowDeclareFunction;
-struct FlowDeclareInterface;
-struct FlowDeclareModule;
-struct FlowDeclareModuleExports;
-struct FlowDeclareTypeAlias;
-struct FlowDeclareOpaqueType;
-struct FlowDeclareVariable;
-struct FlowDeclareExportDeclaration;
-struct FlowEnumDeclaration;
-struct FlowInterface;
-struct FlowOpaqueType;
-struct FlowTypeAlias;
-struct TSDeclareFunction;
-struct TsInterfaceDeclaration;
-struct TsTypeAliasDeclaration;
-struct TsEnumDeclaration;
-struct TsModuleDeclaration;
-struct TsImportEqualsDeclaration;
-struct TsExportAssignment;
-struct TsNamespaceExportDeclaration;
+struct FSwitchStatement : public FStatement 
+{
+    // switch (x) { case 1: ... }
+    FExpression                 Discriminant; // x
+    std::vector<FSwitchCase>    Cases;
+};
+
+struct FThrowStatement : public FStatement 
+{
+    FExpression Argument; // throw new Error()
+};
+
+struct FTryStatement : public FStatement 
+{
+    FBlockStatement Block;     // try { ... }
+    FBlockStatement Finalizer; // finally { ... }
+};
+
+struct FWhileStatement : public FStatement 
+{
+    // while (x > 0) { ... }
+    FExpression Test; // x > 0
+    FStatement  Body; // { ... }
+};
+
+struct FWithStatement : public FStatement 
+{
+    // with (obj) { ... }
+    FExpression Object; // obj
+    FStatement  Body;   // { ... }
+};
+
+struct FClassDeclaration : public FStatement 
+{
+    FIdentifier Identifier; // class Foo { ... }
+};
+
+struct FExportAllDeclaration : public FStatement 
+{
+
+};
+
+struct FForOfStatement : public FStatement 
+{
+    bool bIsAsync; // for (x of iter) / for await (x of iter)
+};
+
+
+// More complex types.
+struct FTSDeclareFunction;
+struct FTsInterfaceDeclaration;
+struct FTsTypeAliasDeclaration;
+struct FTsEnumDeclaration;
+struct FTsModuleDeclaration;
+struct FTsImportEqualsDeclaration;
+struct FTsExportAssignment;
+struct FTsNamespaceExportDeclaration;
+struct FExportDefaultDeclaration;
+struct FExportNamedDeclaration;
+struct FImportDeclaration;
+struct FFlowDeclareClass;
+struct FFlowDeclareFunction;
+struct FFlowDeclareInterface;
+struct FFlowDeclareModule;
+struct FFlowDeclareModuleExports;
+struct FFlowDeclareTypeAlias;
+struct FFlowDeclareOpaqueType;
+struct FFlowDeclareVariable;
+struct FFlowDeclareExportDeclaration;
+struct FFlowEnumDeclaration;
+struct FFlowInterface;
+struct FFlowOpaqueType;
+struct FFlowTypeAlias;
 
 /* --------------------------------------------------------------[ @Statements ]-------------------------------------------------------------------- */
 

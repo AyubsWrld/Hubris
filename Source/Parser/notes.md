@@ -57,3 +57,17 @@ export type Statement =
   | TsExportAssignment
   | TsNamespaceExportDeclaration;
 ```
+
+
+#### Porting Literals 
+______
+
+```typescript
+export type Literal =
+  | RegExpLiteral           // Integrated
+  | NullLiteral             // Integrated
+  | StringLiteral           // Integrated
+  | BooleanLiteral          // Integrated
+  | NumericLiteral          // Integrated
+  | BigIntLiteral;          // Integrated
+```

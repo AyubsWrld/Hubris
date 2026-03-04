@@ -12,7 +12,7 @@ struct  FComment;
 struct  FCommentWhitespace;
 using   Comments    =   std::vector<FComment>;
 
-/* --------------------------------------------------------------[ Enums ]------------------------------------------------------------------- */
+/* --------------------------------------------------------------[ @Enums ]------------------------------------------------------------------- */
 
 enum class ECommentType 
 {
@@ -85,9 +85,9 @@ enum class EUpdateOperator
     Decrement   // --
 };
 
-/* --------------------------------------------------------------[ Enums ]----------------------------------------------------------------------- */
+/* --------------------------------------------------------------[ @Enums ]----------------------------------------------------------------------- */
 
-/* --------------------------------------------------------------[ Comments ]-------------------------------------------------------------------- */
+/* --------------------------------------------------------------[ @Comments ]-------------------------------------------------------------------- */
 
 struct FComment
 {
@@ -108,9 +108,9 @@ struct FCommentWhitespace
 
 
 
-/* --------------------------------------------------------------[ Comments ]-------------------------------------------------------------------- */
+/* --------------------------------------------------------------[ @Comments ]-------------------------------------------------------------------- */
 
-/* --------------------------------------------------------------[ Nodebase ]-------------------------------------------------------------------- */
+/* --------------------------------------------------------------[ @Nodebase ]-------------------------------------------------------------------- */
 
 struct FNodeBase
 {
@@ -123,34 +123,23 @@ struct FNodeBase
     const   std::optional<void*> Extras; // reasoning?
 };
 
-/* --------------------------------------------------------------[ Nodebase ]-------------------------------------------------------------------- */
+/* --------------------------------------------------------------[ @Nodebase ]-------------------------------------------------------------------- */
 
-/* --------------------------------------------------------------[ Statements ]-------------------------------------------------------------------- */
+/* --------------------------------------------------------------[ @Identifier ]-------------------------------------------------------------------- */ 
 
-struct FStatement : public FNodeBase { }; 
+/* 
+ *  An Identifier is an IdentifierName that is not a ReservedWord
+ */
 
-template<typename T>
-constexpr bool IsStatment = std::is_base_of_v<FStatement, T>;
+/* --------------------------------------------------------------[ @Identifier ]-------------------------------------------------------------------- */ 
 
-template<typename T>
-concept Statement = requires(T a){ IsStatment<T>; };
-
-struct FBlockStatement 
-{
-    std::vector<FStatement> Body;
-};
-
-/* --------------------------------------------------------------[ Statements ]-------------------------------------------------------------------- */
-
-/* --------------------------------------------------------------[ Expressions ]-------------------------------------------------------------------- */
-
+/* --------------------------------------------------------------[ @Expressions ]-------------------------------------------------------------------- */
 
 struct FAssignmentExpression;
 struct FBinaryExpression;
 struct FCallExpression;
 struct FConditionalExpression;
 struct FFunctionExpression;
-struct FIdentifier;
 struct FStringLiteral;
 struct FNumericLiteral;
 struct FNullLiteral;
@@ -210,20 +199,129 @@ struct FArrayExpression  : public FExpression
     std::vector<FExpression> Elements;
 };
 
-struct FDoExpression : public FNodeBase 
+struct FDoExpression : public FExpression
 {
     bool bIsAsync; 
 };
 
-struct FObjectExpression : public FNodeBase 
+struct FObjectExpression : public FExpression
 {
 
 };
 
+struct FIdentifier : public FNodeBase 
+{
+    std::string     Name; 
+    bool            bIsOptional;
+};
 
-/* --------------------------------------------------------------[ Expressions ]-------------------------------------------------------------------- */
+/* --------------------------------------------------------------[ @Expressions ]-------------------------------------------------------------------- */
 
-/* --------------------------------------------------------------[ Expressions ]-------------------------------------------------------------------- */
+/* --------------------------------------------------------------[ @Directives ]-------------------------------------------------------------------- */
+/*
+ * A Directive is a special string literal that appears at the beginning
+ * of a Program or BlockStatement body and alters how the code is interpreted.
+ *
+ * The most common example is:
+ *      "use strict";
+ *
+ * Directives must appear before any non-directive statement in the body.
+ * If placed elsewhere, they are treated as normal string literals.
+ *
+ * In the AST, directives are stored separately from regular statements
+ * (e.g., Program::Directives, BlockStatement::Directives).
+ */
+
+//  This relation seems a bit superfluous when we can just have FDirective have a directive literal always?
+struct FDirective : public FNodeBase { }; 
+
+template<typename T>
+constexpr bool IsDirective = std::is_base_of_v<FDirective, T>;
+
+template<typename T>
+concept Directive = requires(T a){ IsDirective<T>; };
+
+struct FDirectiveLiteral : public FDirective 
+{
+    std::string Value;
+};
+
+/* --------------------------------------------------------------[ @Directives ]-------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------[ @Statements ]-------------------------------------------------------------------- */
+
+struct FStatement : public FNodeBase { }; 
+
+template<typename T>
+constexpr bool IsStatment = std::is_base_of_v<FStatement, T>;
+
+template<typename T>
+concept Statement = requires(T a){ IsStatment<T>; };
+
+/* @under-constuction */
+struct FBlockStatement : public FStatement
+{
+    std::vector<FStatement> Body;
+    std::vector<FDirective> Label;
+};
+
+struct FBreakStatement : public FStatement
+{
+    std::optional<FIdentifier> Label;
+};
+
+struct FContinueStatement : public FStatement 
+{
+
+};
+
+struct DebuggerStatement;
+struct DoWhileStatement;
+struct EmptyStatement;
+struct ExpressionStatement;
+struct ForInStatement;
+struct ForStatement;
+struct FunctionDeclaration;
+struct IfStatement;
+struct LabeledStatement;
+struct ReturnStatement;
+struct SwitchStatement;
+struct ThrowStatement;
+struct TryStatement;
+struct VariableDeclaration;
+struct WhileStatement;
+struct WithStatement;
+struct ClassDeclaration;
+struct ExportAllDeclaration;
+struct ExportDefaultDeclaration;
+struct ExportNamedDeclaration;
+struct ForOfStatement;
+struct ImportDeclaration;
+struct FlowDeclareClass;
+struct FlowDeclareFunction;
+struct FlowDeclareInterface;
+struct FlowDeclareModule;
+struct FlowDeclareModuleExports;
+struct FlowDeclareTypeAlias;
+struct FlowDeclareOpaqueType;
+struct FlowDeclareVariable;
+struct FlowDeclareExportDeclaration;
+struct FlowEnumDeclaration;
+struct FlowInterface;
+struct FlowOpaqueType;
+struct FlowTypeAlias;
+struct TSDeclareFunction;
+struct TsInterfaceDeclaration;
+struct TsTypeAliasDeclaration;
+struct TsEnumDeclaration;
+struct TsModuleDeclaration;
+struct TsImportEqualsDeclaration;
+struct TsExportAssignment;
+struct TsNamespaceExportDeclaration;
+
+/* --------------------------------------------------------------[ @Statements ]-------------------------------------------------------------------- */
+
+
 
 
 

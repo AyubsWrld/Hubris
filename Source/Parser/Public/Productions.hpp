@@ -21,7 +21,7 @@ enum class ECommentType
     _MAX_
 };
 
-enum class RegExpFlag
+enum class ERegExpFlag
 {
     Global,        // g
     IgnoreCase,    // i

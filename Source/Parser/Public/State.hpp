@@ -1,8 +1,6 @@
 #pragma once 
 #include "ShorthandTypes.hpp"
 #include "SourceLocation.hpp"
-#include <optional>
-#include <vector>
 
 using   TokenType   =   U64;
 

@@ -73,6 +73,12 @@ export type Literal =
 ``` 
 
 
+#### Porting Decorators
+____
+
+- [x] FDecorator.
+- [x] HasDecorator.
+
 #### Porting Patterns 
 ____
 ```typescript 

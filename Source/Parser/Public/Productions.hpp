@@ -21,13 +21,24 @@ enum class ECommentType
     _MAX_
 };
 
+enum class RegExpFlag
+{
+    Global,        // g
+    IgnoreCase,    // i
+    Multiline,     // m
+    Unicode,       // u
+    DotAll,        // s
+    Sticky,        // y
+    UnicodeSets    // v
+};
+
 enum class EVariableDeclQualifier 
 {
     Var,                        // "var"
-    Let,                        // "var"
-    Const,                      // "var"
-    Using,                      // "var"
-    Await_Using,                // "var"
+    Let,                        // "let"
+    Const,                      // "const"
+    Using,                      // "using"
+    Await_Using,                // "await using"
     _MAX_
 };
 
@@ -173,7 +184,9 @@ struct FNumericLiteral : public FLiteral
 };
 
 // FIXME: using 2 64 bit integers to represent 2^128. 
-// Right now it's more like a fixed-width 128-bit integer. see C _int128
+// Right now it's more like a fixed-width 128-bit integer. see C _int128 perhaps utilize a method that allows the value to "grow" dynamically
+// [limb]-[limb]-[limb]. 
+
 struct FBigIntLiteral : public FLiteral 
 { 
     U64 High;   // Uppers 64bits
@@ -182,14 +195,107 @@ struct FBigIntLiteral : public FLiteral
 
 /* --------------------------------------------------------------[ @Literal ]-------------------------------------------------------------------- */
 
-
 /* --------------------------------------------------------------[ @Identifier ]-------------------------------------------------------------------- */ 
 
 /* 
  *  An Identifier is an IdentifierName that is not a ReservedWord
- */
+*/
+
+struct FIdentifier : public FNodeBase 
+{
+    std::string     Name; 
+    bool            bIsOptional;
+};
+
+//TODO: not in spec.
+struct FTypeAnnotationBase : public FNodeBase
+{
+
+};
 
 /* --------------------------------------------------------------[ @Identifier ]-------------------------------------------------------------------- */ 
+
+/* --------------------------------------------------------------[ @Pattern ]-------------------------------------------------------------------- */
+
+// NOTE: Unfaithful in that it doesn't concern itself with deriving from "FHasDecorator".
+struct FPatternBase : public FNodeBase 
+{
+    bool bIsOptional;
+    std::optional<FTypeAnnotationBase> TypeAnnotation;
+};
+
+template<typename T>
+constexpr bool IsPattern  = std::is_base_of_v<FPatternBase, T>;
+
+template<typename T> 
+concept Pattern = requires(T a) { IsPattern<T>; };
+
+// struct FIdentifier : public FPatternBase { }; // Problem with redecl
+
+// represents object destructuring pattern:
+// e.g. : const { a, b } = obj;
+struct FObjectPattern : public FPatternBase { };
+
+
+// represents array destructuring pattern:
+// e.g. : const [a, b] = arr;
+struct FArrayPattern : public FPatternBase { };
+
+
+// represents a rest element inside a pattern:
+// e.g. : const [a, ...rest] = arr;
+struct FRestElement : public FPatternBase { };
+
+
+// Represents a default value assignment inside a pattern:
+// e.g. : function f(x = 10) {}
+struct FAssignmentPattern : public FPatternBase { };
+
+
+// represents a void pattern.
+// corresponds to "void" usage as a pattern placeholder.
+struct FVoidPattern : public FPatternBase { };
+
+
+/* --------------------------------------------------------------[ @Pattern ]-------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------[ @Assignable ]-------------------------------------------------------------------- */
+
+/* 
+ * An Assignable represents an LValue — something that can appear
+ * on the left-hand side of an assignment.
+*/
+
+struct FAssignable : public FNodeBase { };
+
+template<typename T>
+constexpr bool IsAssignable = std::is_base_of_v<FAssignable, T>;
+
+template<typename T>
+concept Assignable = requires(T a){ IsLiteral<T>; };
+
+// represents property access that can be assigned to:
+// e.g. : obj.value = 42;
+struct FMemberExpression : public FAssignable { };
+
+
+// represents a parenthesized expression that still resolves to an assignable:
+// e.g: (x) = 5;
+struct FParenthesizedExpression : public FAssignable { };
+
+
+// represents a TypeScript-style type cast that still resolves to an assignable:
+// e.g.: (x as number) = 10;
+struct FTsTypeCastExpression : public FAssignable { };
+
+
+// represents a standard type cast expression that resolves to an assignable:
+// example: (<number>x) = 10;
+struct FTypeCastExpression : public FAssignable { };
+
+/* --------------------------------------------------------------[ @Assignable ]-------------------------------------------------------------------- */
+
+
 
 /* --------------------------------------------------------------[ @Expressions ]-------------------------------------------------------------------- */
 
@@ -220,11 +326,6 @@ struct FObjectExpression : public FExpression
 
 };
 
-struct FIdentifier : public FNodeBase 
-{
-    std::string     Name; 
-    bool            bIsOptional;
-};
 
 struct FAssignmentExpression;
 struct FBinaryExpression;
@@ -276,13 +377,33 @@ struct FEstreeLiteral;
 
 /* --------------------------------------------------------------[ @Expressions ]-------------------------------------------------------------------- */
 
-/* --------------------------------------------------------------[ @HasDecorators ]-------------------------------------------------------------------- */
+/* --------------------------------------------------------------[ @Decorators ]-------------------------------------------------------------------- */
+/*
+ * metadata annotations that can appear
+ * before classes, methods, properties, or parameters.
+ *   @sealed
+ *   class MyClass {}
+ *
+ *   @log
+ *   method() {}
+*/
 
+// represents a single decorator.
+// It wraps an expression that will be evaluated as the decorator.
 struct FDecorator : public FNodeBase 
-{
-    FExpression Expression;
+{    
+    
+    FExpression Expression; // @log → "log" is stored as an expression.
 };
-/* --------------------------------------------------------------[ @HasDecorators ]-------------------------------------------------------------------- */
+
+// base struct for any node that can have decorators attached.
+struct FHasDecorator : public FNodeBase 
+{    
+    // it is optional because most nodes will not have decorators.
+    std::optional<std::vector<FDecorator>> Decorators;
+};
+
+/* --------------------------------------------------------------[ @Decorators ]-------------------------------------------------------------------- */
 
 /* --------------------------------------------------------------[ @Directives ]-------------------------------------------------------------------- */
 /*

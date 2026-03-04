@@ -69,5 +69,30 @@ export type Literal =
   | StringLiteral           // Integrated
   | BooleanLiteral          // Integrated
   | NumericLiteral          // Integrated
-  | BigIntLiteral;          // Integrated
+  | BigIntLiteral;          // Integrated cavaet being that right now it's more like a fixed-width 128-bit integer. see C _int128 perhaps utilize a method that allows the value to "grow" dynamically
+``` 
+
+
+#### Porting Patterns 
+____
+```typescript 
+export type Pattern =
+  | Identifier
+  | ObjectPattern
+  | ArrayPattern
+  | RestElement
+  | AssignmentPattern
+  | VoidPattern;
+```
+
+#### Porting Assignable  (RELIES ON PATTERNS)
+______ 
+
+```typescript
+export type Assignable =
+  | Pattern // A bit complicated because it is a concept.
+  | MemberExpression
+  | ParenthesizedExpression
+  | TsTypeCastExpression
+  | TypeCastExpression;
 ```

@@ -272,15 +272,37 @@ struct FBreakStatement : public FStatement
 
 struct FContinueStatement : public FStatement 
 {
-
+    std::optional<FIdentifier> Label;
 };
 
-struct DebuggerStatement;
-struct DoWhileStatement;
-struct EmptyStatement;
-struct ExpressionStatement;
-struct ForInStatement;
-struct ForStatement;
+struct FDebuggerStatement : public FStatement {  };
+
+struct FDoWhileStatement : public FStatement 
+{
+    FStatement  Body;   // { ... } 
+    FExpression Test;   // (expr) condition.
+};
+
+struct FEmptyStatement : public FStatement {  };
+
+struct FExpressionStatement : public FStatement 
+{
+    FExpression Expression; 
+    std::optional<FDirective> Directive;  // for estree
+};
+
+struct FForInStatement : public FStatement 
+{
+    //FIXME: "Shouldn't be here, but have to declare it because it's assigned to a ForInOf unconditionally."
+    bool bIsAsync;
+};
+
+struct FForStatement : public FStatement 
+{
+    FExpression     Test; // (expr) condition.
+    FStatement      Body; // { ... }
+};
+
 struct FunctionDeclaration;
 struct IfStatement;
 struct LabeledStatement;

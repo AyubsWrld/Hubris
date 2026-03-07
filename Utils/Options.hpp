@@ -1,27 +1,36 @@
 #pragma once 
 #include <optional>
-#include <vector>
 #include "ShorthandTypes.hpp"
 
-enum class ESourceType {
+enum class ESourceType 
+{
     Script,
     CommonJS,
     Module,
-    Unambiguous
+    Unambiguous,
+    _MAX_
+};
+
+enum FOptionFlags : U16
+{
+    AllowAwaitOutsideFunction = 1u << 0,
+    AllowReturnOutsideFunction = 1u << 1,
+    AllowNewTargetOutsideFunction = 1u << 2,
+    AllowImportExportEverywhere = 1u << 3,
+    AllowSuperOutsideMethod = 1u << 4,
+    AllowYieldOutsideFunction = 1u << 5,
+    AllowUndeclaredExports = 1u << 6,
+    Ranges = 1u << 7,
+    Tokens = 1u << 8,
+    CreateImportExpressions = 1u << 9,
+    CreateParenthesizedExpressions = 1u << 10,
+    ErrorRecovery = 1u << 11,
+    AttachComment = 1u << 12,
+    AnnexB = 1u << 13,
 };
 
 union UPlugin 
 {
-    /* See babel. 
-    export type ParserPluginWithOptions =
-    | ["discardBinding", { syntaxType: "void" }]
-    | ["estree", { classFeatures?: boolean }]
-    | ["optionalChainingAssign", { version: "2023-07" }]
-    | ["partialApplication", PartialApplicationPluginOptions]
-    | ["pipelineOperator", PipelineOperatorPluginOptions]
-    | ["flow", FlowPluginOptions]
-    | ["typescript", TypeScriptPluginOptions];
-    */
 };
 
 struct FParserOptions
@@ -132,7 +141,7 @@ struct FParserOptions
     /**
      * Array containing the plugins that you want to enable.
      */
-    std::optional<std::vector<UPlugin>> Plugins; // TODO: Tidy this. 
+    //std::optional<std::vector<UPlugin>> Plugins; // TODO: Tidy this. 
 
     /**
      * Should the parser work in strict mode.

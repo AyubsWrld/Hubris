@@ -278,13 +278,13 @@ enum
 
 struct FTokenFlags
 {
-    U8      BeforeExpr : 1;                     // whether token can legally appear before an expression.
-    U8      StartsExpr : 1;                     // whether token can legally start an expression ( "throw", "return").
-    U8      RightAssociative : 1;               // tokens associativity, defaults to left associative (false) unless otherwise specified. ( Bitfield must zero this out)
-    U8      IsLoop : 1;                         // whether the token implies source jumping 
-    U8      Prefix : 1;                         // fixity of token. note that we the flags must include both postfix and prefix for operators that can act as both ('--/++')
-    U8      Postfix : 1;                        // fixity of token. note that we the flags must include both postfix and prefix for operators that can act as both ('--/++')
-    U8      Pad : 2;                            // padding bits.
+    U8      BeforeExpr :        1   =   false;          // whether token can legally appear before an expression.
+    U8      StartsExpr :        1   =   false;          // whether token can legally start an expression ( "throw", "return").
+    U8      RightAssociative :  1   =   false;          // tokens associativity, defaults to left associative (false) unless otherwise specified. ( Bitfield must zero this out)
+    U8      IsLoop :            1   =   false;          // whether the token implies source jumping 
+    U8      Prefix :            1   =   false;          // fixity of token. note that we the flags must include both postfix and prefix for operators that can act as both ('--/++')
+    U8      Postfix :           1   =   false;          // fixity of token. note that we the flags must include both postfix and prefix for operators that can act as both ('--/++')
+    U8      : 2;                                        // padding bits.
 };
 
 struct FToken 
@@ -554,8 +554,7 @@ static inline constexpr FToken kTokenAttributesMap[std::to_underlying(ETokenType
         .Flags = FTokenFlags{ 
             .BeforeExpr = true,
             .StartsExpr = true,
-        },
-        .Name   = 
+        }
     }
 };
 

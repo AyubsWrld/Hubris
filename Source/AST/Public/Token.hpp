@@ -1,4 +1,5 @@
 #pragma once
+#include "ShorthandTypes.hpp"
 
 // export class Token {
 //   constructor(state: State) {

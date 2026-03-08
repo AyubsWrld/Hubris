@@ -2,75 +2,76 @@
 #include "Token.hpp"
 #include "Construction.hpp";
 
-constexpr bool FToken::IsIdentifier() noexcept
+constexpr bool FToken::IsIdentifier() const noexcept
 {
     STUB_INVOCATION();
     return false;
 }
 
-constexpr bool FToken::KeywordOrIdentifierIsKeyword() noexcept
+constexpr bool FToken::KeywordOrIdentifierIsKeyword() const noexcept
 {
     STUB_INVOCATION();
     return false;
 }
 
-constexpr bool FToken::IsLiteralPropertyName() noexcept
+constexpr bool FToken::IsLiteralPropertyName() const noexcept
 {
     STUB_INVOCATION();
     return false;
 }
 
-constexpr bool FToken::PrefixesExpression() noexcept
+constexpr bool FToken::PrefixesExpression() const noexcept
 {
     STUB_INVOCATION();
     return false;
 }
-constexpr bool FToken::IsAssignment() noexcept
+constexpr bool FToken::IsAssignment() const noexcept
 {
     STUB_INVOCATION();
     return false;
 }
-constexpr bool FToken::IsFlowInterfaceOrTypeOrOpaque() noexcept
+constexpr bool FToken::IsFlowInterfaceOrTypeOrOpaque() const noexcept
 {
     STUB_INVOCATION();
     return false;
 }
-constexpr bool FToken::IsLoop() noexcept
+constexpr bool FToken::IsLoop() const noexcept
 {
     STUB_INVOCATION();
     return false;
 }
-constexpr bool FToken::IsOperator() noexcept
+constexpr bool FToken::IsOperator() const noexcept
 {
     STUB_INVOCATION();
     return false;
 }
-constexpr bool FToken::IsPostfix() noexcept
+constexpr bool FToken::IsPostfix() const noexcept
 {
     STUB_INVOCATION();
     return false;
 }
-constexpr bool FToken::IsPrefix() noexcept
+constexpr bool FToken::IsPrefix() const noexcept
 {
     STUB_INVOCATION();
     return false;
 }
-constexpr bool FToken::IsTSTypeOperator() noexcept
+constexpr bool FToken::IsTSTypeOperator() const noexcept
 {
     STUB_INVOCATION();
     return false;
 }
-constexpr bool FToken::IsTSDeclarationStart() noexcept
+constexpr bool FToken::IsTSDeclarationStart() const noexcept
 {
     STUB_INVOCATION();
     return false;
 }
-constexpr bool FToken::IsRightAssociative() noexcept
+constexpr bool FToken::IsRightAssociative() const noexcept
 {
     STUB_INVOCATION();
     return false;
 }
-constexpr bool FToken::operator==(const FToken& other)
+
+constexpr bool FToken::operator==(const FToken& other) const
 {
     STUB_INVOCATION();
     return false;

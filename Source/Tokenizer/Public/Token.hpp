@@ -3,11 +3,11 @@
                                                     FILE OVERVIEW
    ================================================================================================================
 
-   @file:               FToken.hpp
+   @file:               Token.hpp
 
    @purpose:            Defines the token representation used by the JavaScript / TypeScript lexer and parser.
                         This file provides the fundamental structures, enumerations, and helper functions used
-                        to classify and reason about tokens produced during lexical analysis.
+                        to classify and reason about tokens produced during the scanning process.
 
                         Tokens represent the smallest meaningful units of source code such as identifiers,
                         literals, operators, punctuation, and keywords. These tokens are emitted by the
@@ -91,21 +91,6 @@
 #include <utility>
 
 
-struct FTokenAttributes
-{
-    std::optional<std::string>         Keyword;
-    std::optional<U64>  BinaryOperation;
-    struct 
-    {
-        unsigned char   BeforeExpr : 1;
-        unsigned char   StartsExpr : 1;
-        unsigned char   RightAssociative : 1;
-        unsigned char   IsLoop : 1;
-        unsigned char   Prefix : 1;
-        unsigned char   Postfix : 1;
-        unsigned char   Pad : 2;
-    } Flags;
-};
 
 /*
  *  Enumeration describing every token recognized by the lexer including punctuation,
@@ -280,22 +265,34 @@ enum class ETokenType
     _MAX_
 };
 
-// Maps tokens to their attributes. 
-constexpr FTokenAttributes kTokenAttributeMap[std::to_underlying(ETokenType::_MAX_)] = {
-
+// TODO: Bitmasks for easy validation. 
+enum
+{
+    BEFORE_EXPR         =   (1u << 1),
+    STARTS_EXPR         =   (1u << 2),
+    RIGHT_ASSOCIATIVE   =   (1u << 3),
+    IS_LOOP             =   (1u << 4),
+    PREFIX              =   (1u << 5),
+    POSTFIX             =   (1u << 6)
 };
 
+struct FTokenFlags
+{
+    U8      BeforeExpr : 1;                     // whether token can legally appear before an expression.
+    U8      StartsExpr : 1;                     // whether token can legally start an expression ( "throw", "return").
+    U8      RightAssociative : 1;               // tokens associativity, defaults to left associative (false) unless otherwise specified. ( Bitfield must zero this out)
+    U8      IsLoop : 1;                         // whether the token implies source jumping 
+    U8      Prefix : 1;                         // fixity of token. note that we the flags must include both postfix and prefix for operators that can act as both ('--/++')
+    U8      Postfix : 1;                        // fixity of token. note that we the flags must include both postfix and prefix for operators that can act as both ('--/++')
+    U8      Pad : 2;                            // padding bits.
+};
 
-// The `ExportedTokenType` is exported via `tokTypes` and accessible
-// when `tokens: true` is enabled. Unlike internal token type, it provides
-// metadata of the tokens.
-
-/*
- * Structure representing an individual token instance. A token contains its type
- * and may contain additional metadata such as value, source position, and flags.
-*/
 struct FToken 
 {
+    
+    FTokenFlags                 Flags;
+    std::optional<U64>          BinaryOperation;        // Whether token is binary or unary. ("++" vs "+")
+
     /*
     @purpose:               Determines whether the current token represents a valid
                             JavaScript/TypeScript identifier. Identifiers include user-
@@ -313,7 +310,8 @@ struct FToken
                             bindings, and declarations.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool IsIdentifier() noexcept;
+    
+    constexpr bool IsIdentifier() const noexcept;
     
     /*
     @purpose:               Determines whether the current token is either an identifier
@@ -329,7 +327,7 @@ struct FToken
                             constructs from user-defined identifiers.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool KeywordOrIdentifierIsKeyword() noexcept;
+    constexpr bool KeywordOrIdentifierIsKeyword() const noexcept;
     
     /*
     @purpose:               Determines whether the current token may legally appear
@@ -346,7 +344,7 @@ struct FToken
                             and certain keyword-like tokens depending on language rules.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool IsLiteralPropertyName() noexcept;
+    constexpr bool IsLiteralPropertyName() const noexcept;
     
     /*
     @purpose:               Determines whether the current token acts as a prefix
@@ -362,7 +360,7 @@ struct FToken
                             'delete', and similar unary prefix operators.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool PrefixesExpression() noexcept;
+    constexpr bool PrefixesExpression() const noexcept;
     
     /*
     @purpose:               Determines whether the current token type may legally
@@ -379,7 +377,7 @@ struct FToken
                             parsing may begin.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool CanStartExpression() noexcept;
+    constexpr bool CanStartExpression() const noexcept;
     
     /*
     @purpose:               Determines whether the current token represents an
@@ -396,7 +394,7 @@ struct FToken
                             assignment variants depending on tokenizer support.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool IsAssignment() noexcept;
+    constexpr bool IsAssignment() const noexcept;
     
     /*
     @purpose:               Determines whether the current token corresponds to
@@ -412,7 +410,7 @@ struct FToken
     @notes:                 Used in Flow and TypeScript plugin parsing modes.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool IsFlowInterfaceOrTypeOrOpaque() noexcept;
+    constexpr bool IsFlowInterfaceOrTypeOrOpaque() const noexcept;
     
     /*
     @purpose:               Determines whether the token represents a looping
@@ -428,7 +426,7 @@ struct FToken
                             Used to detect loop constructs during statement parsing.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool IsLoop() noexcept;
+    constexpr bool IsLoop() const noexcept;
     
     /*
     @purpose:               Determines whether the current token is classified
@@ -444,7 +442,7 @@ struct FToken
                             Used for expression precedence and parsing logic.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool IsOperator() noexcept;
+    constexpr bool IsOperator() const noexcept;
     
     /*
     @purpose:               Determines whether the current token represents a
@@ -460,7 +458,7 @@ struct FToken
                             an expression.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool IsPostfix() noexcept;
+    constexpr bool IsPostfix() const noexcept;
     
     /*
     @purpose:               Determines whether the current token represents a
@@ -476,7 +474,7 @@ struct FToken
                             and 'delete'.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool IsPrefix() noexcept;
+    constexpr bool IsPrefix() const noexcept;
     
     /*
     @purpose:               Determines whether the token represents a TypeScript
@@ -493,7 +491,7 @@ struct FToken
                             and 'unique'.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool IsTSTypeOperator() noexcept;
+    constexpr bool IsTSTypeOperator() const noexcept;
     
     /*
     @purpose:               Determines whether the token may begin a TypeScript
@@ -510,7 +508,7 @@ struct FToken
                             'enum', 'module', 'namespace', 'interface', and 'type'.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool IsTSDeclarationStart() noexcept;
+    constexpr bool IsTSDeclarationStart() const noexcept;
     
     /*
     @purpose:               Determines whether the operator represented by the
@@ -527,7 +525,7 @@ struct FToken
                             left-associative binary operators.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool IsRightAssociative() noexcept;
+    constexpr bool IsRightAssociative() const noexcept;
     
     /*
     @purpose:               Compares this token instance with another token
@@ -545,9 +543,37 @@ struct FToken
                             and any associated token value.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool operator==(const FToken& other);
+    constexpr bool operator==(const FToken& other) const;
 
 };
+
+// Maps tokens to their attributes. 
+static inline constexpr FToken kTokenAttributesMap[std::to_underlying(ETokenType::_MAX_)] = 
+{
+    FToken{ 
+        .Flags = FTokenFlags{ 
+            .BeforeExpr = true,
+            .StartsExpr = true,
+        },
+        .Name   = 
+    }
+};
+
+
+// The `ExportedTokenType` is exported via `tokTypes` and accessible
+// when `tokens: true` is enabled. Unlike internal token type, it provides
+// metadata of the tokens.
+
+/*
+ * Structure representing an individual token instance. A token contains its type
+ * and may contain additional metadata such as value, source position, and flags.
+*/
+
+/* 
+ * I believe that this should have a private ctor so as to not let the public
+ * initialize their own. 
+*/
+
 
 
 

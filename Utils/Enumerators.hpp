@@ -1,6 +1,10 @@
 #pragma once
 #include <type_traits>
 
+// TODO: Shorthand for declaring bitmasks. 
+#define DECLARE_BITMASK(ENUMERATOR_NAME, ...) \
+
+
 template<typename T> 
 requires std::is_enum_v<T>
 constexpr T operator|(T EnumeratorA, T EnumeratorB) noexcept

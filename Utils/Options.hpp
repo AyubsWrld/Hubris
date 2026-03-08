@@ -11,7 +11,7 @@ enum class ESourceType
     _MAX_
 };
 
-enum FOptionFlags : U16
+enum class FOptionFlags : U16
 {
     AllowAwaitOutsideFunction = 1u << 0,
     AllowReturnOutsideFunction = 1u << 1,
@@ -27,13 +27,22 @@ enum FOptionFlags : U16
     ErrorRecovery = 1u << 11,
     AttachComment = 1u << 12,
     AnnexB = 1u << 13,
+    _MAX_
 };
+
+enum class EKeepOptionalKeys 
+{
+    SoureFilename,
+    StrictMode,
+    _MAX_
+};
+
 
 union UPlugin 
 {
 };
 
-struct FParserOptions
+struct FCompilerOptions
 {
     /**
      * By default, import and export declarations can only appear at a program's top level.
@@ -141,6 +150,7 @@ struct FParserOptions
     /**
      * Array containing the plugins that you want to enable.
      */
+    
     //std::optional<std::vector<UPlugin>> Plugins; // TODO: Tidy this. 
 
     /**
@@ -162,7 +172,7 @@ struct FParserOptions
     /**
      * By default, the parser adds information about parentheses by setting
      * extra.parenthesized to true as needed.
-     * When this option is true the parser creates ParenthesizedExpression
+     * When this option is true the parser creates ParenthesizedExpression  
      * AST nodes instead of using the extra property.
      */
     std::optional<bool> bCreateParenthesizedExpressions;
@@ -171,5 +181,48 @@ struct FParserOptions
      * By default, the parser parses import expressions as an ImportExpression node.
      * Set this to false to parse it as CallExpression(Import, [Identifier(foo)]).
      */
+    
     std::optional<bool> bCreateImportExpressions;
+
+
 };
+
+inline FCompilerOptions CreateDefaultOptions()
+{
+    return FCompilerOptions{
+        .bAllowImportExportEverywhere       = false,
+        .bAllowAwaitOutsideFunction         = false,
+        .bAllowReturnOutsideFunction        = false,
+        .bAllowNewTargetOutsideFunction     = false,
+        .bAllowSuperOutsideMethod           = false,
+        .bAllowUndeclaredExports            = false,
+        .bAllowYieldOutsideFunction         = false,
+
+        .bAnnexB                            = true,
+        .bAttachComment                     = true,
+        .bErrorRecovery                     = false,
+
+        .SourceType                         = ESourceType::Script,
+        .SourceFilename                     = std::optional<std::string>{},
+
+        .StartIndex                         = 0,
+        .StartLine                          = 1,
+        .StartColumn                        = 0,
+
+        //.Plugins                          = std::vector<UPlugin>{}, // TODO
+
+        .bStrictMode                        = std::optional<bool>{},
+
+        .bRanges                            = false,
+        .bTokens                            = false,
+
+        .bCreateParenthesizedExpressions    = false,
+        .bCreateImportExpressions           = true
+    };
+}
+
+inline FCompilerOptions GetOptions()
+{
+    FCompilerOptions Options = CreateDefaultOptions();
+    return Options;
+}

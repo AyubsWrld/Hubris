@@ -8,6 +8,7 @@ project(
 
 add_subdirectory(Source/AST)
 add_subdirectory(Source/Parser)
+add_subdirectory(Source/Tokenizer)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
@@ -18,7 +19,7 @@ add_executable(Hubris Source/main.cpp)
 
 target_include_directories(
     Hubris
-    PRIVATE
+    PUBLIC
     Utils/
 )
 
@@ -26,5 +27,6 @@ target_link_libraries(Hubris
     PRIVATE
     hubrisast
     hubrisparser
+    hubristokenizer
 )
 

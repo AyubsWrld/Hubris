@@ -16,7 +16,7 @@ class UParserBase
     // declare filename: string | undefined | null;
     // declare startIndex: number;
 
-    FParserOptions Options;
+    FCompilerOptions Options;
     enum {
         __UNIMPLEMENTED__
     } OptionFlags;

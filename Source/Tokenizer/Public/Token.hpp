@@ -291,7 +291,7 @@ struct FToken
 {
     
     FTokenFlags                 Flags;
-    std::optional<U64>          BinaryOperation;        // Whether token is binary or unary. ("++" vs "+")
+    std::optional<U64>          BinOp;        // Encodes Precedence.
 
     /*
     @purpose:               Determines whether the current token represents a valid
@@ -548,14 +548,166 @@ struct FToken
 };
 
 // Maps tokens to their attributes. 
-static inline constexpr FToken kTokenAttributesMap[std::to_underlying(ETokenType::_MAX_)] = 
+static inline constexpr FToken kTokenAttributes[std::to_underlying(ETokenType::_MAX_)] =
 {
-    FToken{ 
-        .Flags = FTokenFlags{ 
-            .BeforeExpr = true,
-            .StartsExpr = true,
-        }
-    }
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true } },                              // bracketleft          [
+    FToken{ .Flags = { } },                                                                      // bracketright         ]
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true } },                              // braceleft            {
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true } },                              // bracebarleft         {|
+    FToken{ .Flags = { } },                                                                      // braceright           }
+    FToken{ .Flags = { } },                                                                      // bracebarright        |}
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true } },                              // parenthesisleft      (
+    FToken{ .Flags = { } },                                                                      // parenthesisright     )
+    FToken{ .Flags = { .BeforeExpr = true } },                                                   // comma                ,
+    FToken{ .Flags = { .BeforeExpr = true } },                                                   // semicolon            ;
+    FToken{ .Flags = { .BeforeExpr = true } },                                                   // colon                :
+    FToken{ .Flags = { .BeforeExpr = true } },                                                   // doublecolon          ::
+    FToken{ .Flags = { } },                                                                      // dot                  .
+    FToken{ .Flags = { .BeforeExpr = true } },                                                   // question             ?
+    FToken{ .Flags = { } },                                                                      // questiondot          ?.
+    FToken{ .Flags = { .BeforeExpr = true } },                                                   // arrow                =>
+    FToken{ .Flags = { } },                                                                      // template             template
+    FToken{ .Flags = { .BeforeExpr = true } },                                                   // ellipsis             ...
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // backquote            `
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true } },                              // dollarbraceleft      ${
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // templatetail         ...`
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true } },                              // templatenontail      ...${
+    FToken{ .Flags = { } },                                                                      // at                   @
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // hash                 #
+    FToken{ .Flags = { } },                                                                      // interpreterdirective #!...
+
+    // assignment operators
+    FToken{ .Flags = { .BeforeExpr = true, .IsAssign = true } },                                // eq                   =
+    FToken{ .Flags = { .BeforeExpr = true, .IsAssign = true } },                                // assign               _=
+    FToken{ .Flags = { .BeforeExpr = true, .IsAssign = true } },                                // slashassign          _=
+    FToken{ .Flags = { .BeforeExpr = true, .IsAssign = true } },                                // xorassign            _=
+    FToken{ .Flags = { .BeforeExpr = true, .IsAssign = true } },                                // moduloassign         _=
+
+    // unary / update operators
+    FToken{ .Flags = { .StartsExpr = true, .Prefix = true, .Postfix = true } },                 // incdec               ++/--
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true, .Prefix = true } },              // bang                 !
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true, .Prefix = true } },              // tilde                ~
+
+    // hack topic tokens
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // doublecaret          ^^
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // doubleat             @@
+
+    // binary operators
+    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 0 },                                      // pipeline             |>
+    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 1 },                                      // nullishcoalescing    ??
+    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 1 },                                      // logicalor            ||
+    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 2 },                                      // logicaland           &&
+    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 3 },                                      // bitwiseor            |
+    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 4 },                                      // bitwisexor           ^
+    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 5 },                                      // bitwiseand           &
+    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 6 },                                      // equality             ==/!=
+    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 7 },                                      // lessthan             
+    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 7 },                                      // greaterthan          >
+    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 7 },                                      // relational           </>/<=/>=
+    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 8 },                                      // bitshift             <</>>/>>>
+    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 8 },                                      // bitshiftleft         
+    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 8 },                                      // bitshiftright        >>/>>>
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true, .Prefix = true }, .Binop = 9 },  // plusminus            +/-
+    FToken{ .Flags = { .StartsExpr = true }, .Binop = 10 },                                     // modulo               %
+    FToken{ .Flags = { }, .Binop = 10 },                                                         // star                 *
+    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 10 },                                     // slash                /
+    FToken{ .Flags = { .BeforeExpr = true, .RightAssociative = true }, .Binop = 11 },           // exponent             **
+
+    // keywords
+    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 7 },                                      // in                   in
+    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 7 },                                      // instanceof           instanceof
+    FToken{ .Flags = { } },                                                                      // break                break
+    FToken{ .Flags = { .BeforeExpr = true } },                                                   // case                 case
+    FToken{ .Flags = { } },                                                                      // catch                catch
+    FToken{ .Flags = { } },                                                                      // continue             continue
+    FToken{ .Flags = { } },                                                                      // debugger             debugger
+    FToken{ .Flags = { .BeforeExpr = true } },                                                   // default              default
+    FToken{ .Flags = { .BeforeExpr = true } },                                                   // else                 else
+    FToken{ .Flags = { } },                                                                      // finally              finally
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // function             function
+    FToken{ .Flags = { } },                                                                      // if                   if
+    FToken{ .Flags = { .BeforeExpr = true } },                                                   // return               return
+    FToken{ .Flags = { } },                                                                      // switch               switch
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true, .Prefix = true } },              // throw                throw
+    FToken{ .Flags = { } },                                                                      // try                  try
+    FToken{ .Flags = { } },                                                                      // var                  var
+    FToken{ .Flags = { } },                                                                      // const                const
+    FToken{ .Flags = { } },                                                                      // with                 with
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true } },                              // new                  new
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // this                 this
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // super                super
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // class                class
+    FToken{ .Flags = { .BeforeExpr = true } },                                                   // extends              extends
+    FToken{ .Flags = { } },                                                                      // export               export
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // import               import
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // null                 null
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // true                 true
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // false                false
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true, .Prefix = true } },              // typeof               typeof
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true, .Prefix = true } },              // void                 void
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true, .Prefix = true } },              // delete               delete
+    FToken{ .Flags = { .BeforeExpr = true, .IsLoop = true } },                                  // do                   do
+    FToken{ .Flags = { .IsLoop = true } },                                                       // for                  for
+    FToken{ .Flags = { .IsLoop = true } },                                                       // while                while
+
+    // keyword-like identifiers
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // as                   as
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // assert               assert
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // async                async
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // await                await
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // defer                defer
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // from                 from
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // get                  get
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // let                  let
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // meta                 meta
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // of                   of
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // sent                 sent
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // set                  set
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // source               source
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // static               static
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // using                using
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // yield                yield
+
+    // flow / ts keyword-like
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // asserts              asserts
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // checks               checks
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // exports              exports
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // global               global
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // implements           implements
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // intrinsic            intrinsic
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // infer                infer
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // is                   is
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // mixins               mixins
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // proto                proto
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // require              require
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // satisfies            satisfies
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // keyof                keyof
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // readonly             readonly
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // unique               unique
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // abstract             abstract
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // declare              declare
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // enum                 enum
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // module               module
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // namespace            namespace
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // interface            interface
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // type                 type
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // opaque               opaque
+
+    // literals and special
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // name                 name
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // placeholder          %%
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // string               string
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // number               num
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // bigint               bigint
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // regexp               regexp
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // privatename          #name
+    FToken{ .Flags = { } },                                                                      // endoffile            eof
+
+    // jsx
+    FToken{ .Flags = { } },                                                                      // jsxname              jsxname
+    FToken{ .Flags = { .BeforeExpr = true } },                                                   // jsxtext              jsxtext
+    FToken{ .Flags = { .StartsExpr = true } },                                                   // jsxtagstart          jsxtagstart
+    FToken{ .Flags = { } },                                                                      // jsxtagend            jsxtagend
 };
 
 

@@ -711,20 +711,6 @@ static inline constexpr FToken kTokenAttributes[std::to_underlying(ETokenType::_
 };
 
 
-// The `ExportedTokenType` is exported via `tokTypes` and accessible
-// when `tokens: true` is enabled. Unlike internal token type, it provides
-// metadata of the tokens.
-
-/*
- * Structure representing an individual token instance. A token contains its type
- * and may contain additional metadata such as value, source position, and flags.
-*/
-
-/* 
- * I believe that this should have a private ctor so as to not let the public
- * initialize their own. 
-*/
-
 
 
 

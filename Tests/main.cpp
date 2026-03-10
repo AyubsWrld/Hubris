@@ -6,7 +6,24 @@
 // Binary Operator Test.
 // Every Binary Operator has defined BinOp
 // sizeof(kTokenAttributes == ETokenTypes::_MAX_)
-TEST(TokenzierTest, OperatorPrecedence)
+
+// Used structs so there isn't all a need for access specifiers most attributes should be public anyway.
+struct TokenTest : public testing::Test
 {
-    EXPECT_EQ(1 + 1, 2);
+    const FToken& Addition = GetTokenAttributes(ETokenType::PlusMinus);
+    const FToken& Subtraction = GetTokenAttributes(ETokenType::PlusMinus);
+};
+
+TEST_F(TokenTest, OperatorPrecedence)
+{
+    EXPECT_EQ(Addition.BinOp, Subtraction.BinOp) << "Addition && Subtraction should have the same operator precedence";
 }
+
+
+int main (int argc, char *argv[]) 
+{
+    testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+
+

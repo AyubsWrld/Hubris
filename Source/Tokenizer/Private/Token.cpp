@@ -89,7 +89,7 @@ constexpr std::optional<U8> FToken::OperatorPrecedence() const noexcept
     return BinOp;
 }
 
-static const FToken& GetTokenAttributes(ETokenType InToken)
+const FToken& GetTokenAttributes(ETokenType InToken)
 {
     return kTokenAttributes[std::to_underlying(InToken)];
 }

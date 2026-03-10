@@ -645,15 +645,8 @@ struct FToken
 @code:               const FToken&  Tokens attributes. 
 
 */
-static const FToken& GetTokenAttributes(ETokenType InToken);
 
-/* TODO: Might be superfluoous */ 
-
-template<typename T>
-struct IsTokenType
-{
-    static inline constexpr bool Value = std::is_base_of_v<FToken, T>;
-};
+const FToken& GetTokenAttributes(ETokenType InToken);
 
 
 // Maps tokens to their attributes. 

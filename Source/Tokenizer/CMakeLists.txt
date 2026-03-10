@@ -3,6 +3,7 @@ add_library(
     Private/Context.cpp
     Private/State.cpp
     Private/Tokenizer.cpp
+    Private/Token.cpp
 )
 
 target_include_directories(

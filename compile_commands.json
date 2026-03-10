@@ -10,5 +10,77 @@
   "command": "/usr/sbin/c++  -I/root/projects/Hubris/Utils -I/root/projects/Hubris/Source/AST/Public -I/root/projects/Hubris/Source/AST/{CMAKE_SOURCE_DIR}/Utils -I/root/projects/Hubris/Source/Parser/Public -I/root/projects/Hubris/Source/Tokenizer/Public -std=c++23 -o CMakeFiles/Hubris.dir/Source/Parser/Private/ParseError.cpp.o -c /root/projects/Hubris/Source/Parser/Private/ParseError.cpp",
   "file": "/root/projects/Hubris/Source/Parser/Private/ParseError.cpp",
   "output": "CMakeFiles/Hubris.dir/Source/Parser/Private/ParseError.cpp.o"
+},
+{
+  "directory": "/root/projects/Hubris/Build",
+  "command": "/usr/sbin/c++  -I/root/projects/Hubris/Utils -I/root/projects/Hubris/Source/AST/Public -I/root/projects/Hubris/Source/AST/{CMAKE_SOURCE_DIR}/Utils -I/root/projects/Hubris/Source/Parser/Public -I/root/projects/Hubris/Source/Tokenizer/Public -isystem /root/projects/Hubris/Build/_deps/googletest-src/googletest/include -isystem /root/projects/Hubris/Build/_deps/googletest-src/googletest -std=c++23 -o CMakeFiles/HubrisTests.dir/Tests/main.cpp.o -c /root/projects/Hubris/Tests/main.cpp",
+  "file": "/root/projects/Hubris/Tests/main.cpp",
+  "output": "CMakeFiles/HubrisTests.dir/Tests/main.cpp.o"
+},
+{
+  "directory": "/root/projects/Hubris/Build",
+  "command": "/usr/sbin/c++  -I/root/projects/Hubris/Utils -I/root/projects/Hubris/Source/AST/Public -I/root/projects/Hubris/Source/AST/{CMAKE_SOURCE_DIR}/Utils -I/root/projects/Hubris/Source/Parser/Public -I/root/projects/Hubris/Source/Tokenizer/Public -isystem /root/projects/Hubris/Build/_deps/googletest-src/googletest/include -isystem /root/projects/Hubris/Build/_deps/googletest-src/googletest -std=c++23 -o CMakeFiles/HubrisTests.dir/Source/Parser/Private/ParseError.cpp.o -c /root/projects/Hubris/Source/Parser/Private/ParseError.cpp",
+  "file": "/root/projects/Hubris/Source/Parser/Private/ParseError.cpp",
+  "output": "CMakeFiles/HubrisTests.dir/Source/Parser/Private/ParseError.cpp.o"
+},
+{
+  "directory": "/root/projects/Hubris/Build/_deps/googletest-build/googlemock",
+  "command": "/usr/sbin/c++  -I/root/projects/Hubris/Build/_deps/googletest-src/googlemock/include -I/root/projects/Hubris/Build/_deps/googletest-src/googlemock -isystem /root/projects/Hubris/Build/_deps/googletest-src/googletest/include -isystem /root/projects/Hubris/Build/_deps/googletest-src/googletest -std=c++23 -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o CMakeFiles/gmock.dir/src/gmock-all.cc.o -c /root/projects/Hubris/Build/_deps/googletest-src/googlemock/src/gmock-all.cc",
+  "file": "/root/projects/Hubris/Build/_deps/googletest-src/googlemock/src/gmock-all.cc",
+  "output": "_deps/googletest-build/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.o"
+},
+{
+  "directory": "/root/projects/Hubris/Build/_deps/googletest-build/googlemock",
+  "command": "/usr/sbin/c++  -isystem /root/projects/Hubris/Build/_deps/googletest-src/googlemock/include -isystem /root/projects/Hubris/Build/_deps/googletest-src/googlemock -isystem /root/projects/Hubris/Build/_deps/googletest-src/googletest/include -isystem /root/projects/Hubris/Build/_deps/googletest-src/googletest -std=c++23 -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o CMakeFiles/gmock_main.dir/src/gmock_main.cc.o -c /root/projects/Hubris/Build/_deps/googletest-src/googlemock/src/gmock_main.cc",
+  "file": "/root/projects/Hubris/Build/_deps/googletest-src/googlemock/src/gmock_main.cc",
+  "output": "_deps/googletest-build/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o"
+},
+{
+  "directory": "/root/projects/Hubris/Build/_deps/googletest-build/googletest",
+  "command": "/usr/sbin/c++  -I/root/projects/Hubris/Build/_deps/googletest-src/googletest/include -I/root/projects/Hubris/Build/_deps/googletest-src/googletest -std=c++23 -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o CMakeFiles/gtest.dir/src/gtest-all.cc.o -c /root/projects/Hubris/Build/_deps/googletest-src/googletest/src/gtest-all.cc",
+  "file": "/root/projects/Hubris/Build/_deps/googletest-src/googletest/src/gtest-all.cc",
+  "output": "_deps/googletest-build/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o"
+},
+{
+  "directory": "/root/projects/Hubris/Build/_deps/googletest-build/googletest",
+  "command": "/usr/sbin/c++  -isystem /root/projects/Hubris/Build/_deps/googletest-src/googletest/include -isystem /root/projects/Hubris/Build/_deps/googletest-src/googletest -std=c++23 -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o CMakeFiles/gtest_main.dir/src/gtest_main.cc.o -c /root/projects/Hubris/Build/_deps/googletest-src/googletest/src/gtest_main.cc",
+  "file": "/root/projects/Hubris/Build/_deps/googletest-src/googletest/src/gtest_main.cc",
+  "output": "_deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o"
+},
+{
+  "directory": "/root/projects/Hubris/Build/Source/AST",
+  "command": "/usr/sbin/c++  -I/root/projects/Hubris/Source/AST/Public -I/root/projects/Hubris/Source/AST/{CMAKE_SOURCE_DIR}/Utils -std=c++23 -o CMakeFiles/hubrisast.dir/Private/Empty.cpp.o -c /root/projects/Hubris/Source/AST/Private/Empty.cpp",
+  "file": "/root/projects/Hubris/Source/AST/Private/Empty.cpp",
+  "output": "Source/AST/CMakeFiles/hubrisast.dir/Private/Empty.cpp.o"
+},
+{
+  "directory": "/root/projects/Hubris/Build/Source/Parser",
+  "command": "/usr/sbin/c++  -I/root/projects/Hubris/Source/Parser/Public -I/root/projects/Hubris/Utils -std=c++23 -o CMakeFiles/hubrisparser.dir/Private/Parser.cpp.o -c /root/projects/Hubris/Source/Parser/Private/Parser.cpp",
+  "file": "/root/projects/Hubris/Source/Parser/Private/Parser.cpp",
+  "output": "Source/Parser/CMakeFiles/hubrisparser.dir/Private/Parser.cpp.o"
+},
+{
+  "directory": "/root/projects/Hubris/Build/Source/Parser",
+  "command": "/usr/sbin/c++  -I/root/projects/Hubris/Source/Parser/Public -I/root/projects/Hubris/Utils -std=c++23 -o CMakeFiles/hubrisparser.dir/Private/ParseError.cpp.o -c /root/projects/Hubris/Source/Parser/Private/ParseError.cpp",
+  "file": "/root/projects/Hubris/Source/Parser/Private/ParseError.cpp",
+  "output": "Source/Parser/CMakeFiles/hubrisparser.dir/Private/ParseError.cpp.o"
+},
+{
+  "directory": "/root/projects/Hubris/Build/Source/Tokenizer",
+  "command": "/usr/sbin/c++  -I/root/projects/Hubris/Source/Tokenizer/Public -I/root/projects/Hubris/Utils -std=c++23 -o CMakeFiles/hubristokenizer.dir/Private/Context.cpp.o -c /root/projects/Hubris/Source/Tokenizer/Private/Context.cpp",
+  "file": "/root/projects/Hubris/Source/Tokenizer/Private/Context.cpp",
+  "output": "Source/Tokenizer/CMakeFiles/hubristokenizer.dir/Private/Context.cpp.o"
+},
+{
+  "directory": "/root/projects/Hubris/Build/Source/Tokenizer",
+  "command": "/usr/sbin/c++  -I/root/projects/Hubris/Source/Tokenizer/Public -I/root/projects/Hubris/Utils -std=c++23 -o CMakeFiles/hubristokenizer.dir/Private/State.cpp.o -c /root/projects/Hubris/Source/Tokenizer/Private/State.cpp",
+  "file": "/root/projects/Hubris/Source/Tokenizer/Private/State.cpp",
+  "output": "Source/Tokenizer/CMakeFiles/hubristokenizer.dir/Private/State.cpp.o"
+},
+{
+  "directory": "/root/projects/Hubris/Build/Source/Tokenizer",
+  "command": "/usr/sbin/c++  -I/root/projects/Hubris/Source/Tokenizer/Public -I/root/projects/Hubris/Utils -std=c++23 -o CMakeFiles/hubristokenizer.dir/Private/Tokenizer.cpp.o -c /root/projects/Hubris/Source/Tokenizer/Private/Tokenizer.cpp",
+  "file": "/root/projects/Hubris/Source/Tokenizer/Private/Tokenizer.cpp",
+  "output": "Source/Tokenizer/CMakeFiles/hubristokenizer.dir/Private/Tokenizer.cpp.o"
 }
 ]

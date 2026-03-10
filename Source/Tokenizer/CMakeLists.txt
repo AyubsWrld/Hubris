@@ -9,4 +9,5 @@ target_include_directories(
     hubristokenizer 
     PUBLIC 
     ${CMAKE_CURRENT_SOURCE_DIR}/Public/
+    ${CMAKE_SOURCE_DIR}/Utils
 )

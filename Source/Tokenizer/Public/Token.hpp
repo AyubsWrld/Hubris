@@ -88,6 +88,7 @@
 #include "ShorthandTypes.hpp"
 #include "Enumerators.hpp"
 #include <optional>
+#include <type_traits>
 #include <utility>
 
 
@@ -280,18 +281,20 @@ struct FTokenFlags
 {
     U8      BeforeExpr :        1   =   false;          // whether token can legally appear before an expression.
     U8      StartsExpr :        1   =   false;          // whether token can legally start an expression ( "throw", "return").
-    U8      RightAssociative :  1   =   false;          // tokens associativity, defaults to left associative (false) unless otherwise specified. ( Bitfield must zero this out)
+    U8      RightAssociative :  1   =   false;          // tokens associativity, defaults to left associative (false) unless otherwise specified. 
     U8      IsLoop :            1   =   false;          // whether the token implies source jumping 
+    U8      IsAssign:           1   =   false;          // whether the token can be used within an assignment statement.
     U8      Prefix :            1   =   false;          // fixity of token. note that we the flags must include both postfix and prefix for operators that can act as both ('--/++')
     U8      Postfix :           1   =   false;          // fixity of token. note that we the flags must include both postfix and prefix for operators that can act as both ('--/++')
-    U8      : 2;                                        // padding bits.
+    U8      : 1;                                        // padding bit.
 };
 
 struct FToken 
 {
     
     FTokenFlags                 Flags;
-    std::optional<U64>          BinOp;        // Encodes Precedence.
+    std::optional<U8>           BinOp;          // Encodes Precedence.
+    ETokenType                  TokenType;      // Token Type for tagging attributes to the token it represents.
 
     /*
     @purpose:               Determines whether the current token represents a valid
@@ -329,6 +332,22 @@ struct FToken
     */
     constexpr bool KeywordOrIdentifierIsKeyword() const noexcept;
     
+    /*
+    @purpose:               Determines whether the current token is either an identifier
+                            or a keyword that behaves as a reserved word in the grammar.
+    
+    @param:              none
+    
+                                        return
+    
+    @code:               bool            True if the token is a keyword token.
+    
+    @notes:                 Used during parsing to distinguish reserved language
+                            constructs from user-defined identifiers.
+                            noexcept guarantee — does not throw exceptions.
+    */
+    constexpr bool IsKeywordOrIdentifier() const noexcept;
+
     /*
     @purpose:               Determines whether the current token may legally appear
                             as a literal property name within an object literal or
@@ -427,6 +446,22 @@ struct FToken
                             noexcept guarantee — does not throw exceptions.
     */
     constexpr bool IsLoop() const noexcept;
+
+    /*
+    @purpose:               Determines whether the token represents a looping
+                            control-flow keyword.
+    
+    @param:              none
+    
+                                        return
+    
+    @code:               bool            True if the token corresponds to a loop keyword.
+    
+    @notes:                 Includes 'for', 'while', and 'do'.
+                            Used to detect loop constructs during statement parsing.
+                            noexcept guarantee — does not throw exceptions.
+    */
+    constexpr bool IsKeyword() const noexcept;
     
     /*
     @purpose:               Determines whether the current token is classified
@@ -528,6 +563,57 @@ struct FToken
     constexpr bool IsRightAssociative() const noexcept;
     
     /*
+    @purpose:               Determines whether the operator represented by the
+                            current token is a binary operator.
+    
+    @param:              none
+    
+                                        return
+    
+    @code:               bool            True if the operator is a binary operator.
+    
+    */
+    constexpr bool IsBinaryOperator() const noexcept;
+
+    /*
+    @purpose:               Given a binary opeartor return operator precedence 
+                            of token.
+    
+    @param:              none
+    
+                                        return
+    
+    @code:               std::optional<U8> Number encoding tokens operator precedence if binary operator, std::nullopt_t otherwise.
+    
+    @notes:                 Operator precedence is encoded within a 
+                            tokens BinOp field. If defined it returns
+                            a number which can be used to compare tokens 
+                            representing binary operators based on their 
+                            operator precedence. It is the callers job 
+                            to retrieve the value from the optional.
+    */
+    
+    constexpr std::optional<U8>  OperatorPrecedence() const noexcept;
+
+
+    /*
+    @purpose:               Determines whether the operator represented by the
+                            current token is right-associative.
+    
+    @param:              none
+    
+                                        return
+    
+    @code:               bool            True if the operator is right-associative.
+    
+    @notes:                 Used for operators such as exponentiation '**'
+                            where evaluation order differs from standard
+                            left-associative binary operators.
+                            noexcept guarantee — does not throw exceptions.
+    */
+    constexpr bool IsTemplate() const noexcept;
+
+    /*
     @purpose:               Compares this token instance with another token
                             to determine equality.
     
@@ -543,175 +629,194 @@ struct FToken
                             and any associated token value.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool operator==(const FToken& other) const;
+
+
+    //constexpr bool operator==(const FToken& other) const;
 
 };
+
+/*
+@purpose:               Given a token type, return the tokens attributes.
+
+@param:              [in]           ETokenType InType
+
+                                    return
+
+@code:               const FToken&  Tokens attributes. 
+
+*/
+static const FToken& GetTokenAttributes(ETokenType InToken);
+
+/* TODO: Might be superfluoous */ 
+
+template<typename T>
+struct IsTokenType
+{
+    static inline constexpr bool Value = std::is_base_of_v<FToken, T>;
+};
+
 
 // Maps tokens to their attributes. 
+
 static inline constexpr FToken kTokenAttributes[std::to_underlying(ETokenType::_MAX_)] =
 {
-    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true } },                              // bracketleft          [
-    FToken{ .Flags = { } },                                                                      // bracketright         ]
-    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true } },                              // braceleft            {
-    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true } },                              // bracebarleft         {|
-    FToken{ .Flags = { } },                                                                      // braceright           }
-    FToken{ .Flags = { } },                                                                      // bracebarright        |}
-    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true } },                              // parenthesisleft      (
-    FToken{ .Flags = { } },                                                                      // parenthesisright     )
-    FToken{ .Flags = { .BeforeExpr = true } },                                                   // comma                ,
-    FToken{ .Flags = { .BeforeExpr = true } },                                                   // semicolon            ;
-    FToken{ .Flags = { .BeforeExpr = true } },                                                   // colon                :
-    FToken{ .Flags = { .BeforeExpr = true } },                                                   // doublecolon          ::
-    FToken{ .Flags = { } },                                                                      // dot                  .
-    FToken{ .Flags = { .BeforeExpr = true } },                                                   // question             ?
-    FToken{ .Flags = { } },                                                                      // questiondot          ?.
-    FToken{ .Flags = { .BeforeExpr = true } },                                                   // arrow                =>
-    FToken{ .Flags = { } },                                                                      // template             template
-    FToken{ .Flags = { .BeforeExpr = true } },                                                   // ellipsis             ...
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // backquote            `
-    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true } },                              // dollarbraceleft      ${
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // templatetail         ...`
-    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true } },                              // templatenontail      ...${
-    FToken{ .Flags = { } },                                                                      // at                   @
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // hash                 #
-    FToken{ .Flags = { } },                                                                      // interpreterdirective #!...
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true }, .TokenType = ETokenType::BracketLeft },           // [
+    FToken{ .Flags = { }, .TokenType = ETokenType::BracketRight },                                                  // ]
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true }, .TokenType = ETokenType::BraceLeft },             // {
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true }, .TokenType = ETokenType::BraceBarLeft },          // {|
+    FToken{ .Flags = { }, .TokenType = ETokenType::BraceRight },                                                    // }
+    FToken{ .Flags = { }, .TokenType = ETokenType::BraceBarRight },                                                 // |}
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true }, .TokenType = ETokenType::ParenthesisLeft },       // (
+    FToken{ .Flags = { }, .TokenType = ETokenType::ParenthesisRight },                                              // )
+    FToken{ .Flags = { .BeforeExpr = true }, .TokenType = ETokenType::Comma },                                      // ,
+    FToken{ .Flags = { .BeforeExpr = true }, .TokenType = ETokenType::Semicolon },                                  // ;
+    FToken{ .Flags = { .BeforeExpr = true }, .TokenType = ETokenType::Colon },                                      // :
+    FToken{ .Flags = { .BeforeExpr = true }, .TokenType = ETokenType::DoubleColon },                                // ::
+    FToken{ .Flags = { }, .TokenType = ETokenType::Dot },                                                           // .
+    FToken{ .Flags = { .BeforeExpr = true }, .TokenType = ETokenType::Question },                                   // ?
+    FToken{ .Flags = { }, .TokenType = ETokenType::QuestionDot },                                                   // ?.
+    FToken{ .Flags = { .BeforeExpr = true }, .TokenType = ETokenType::Arrow },                                      // =>
+    FToken{ .Flags = { }, .TokenType = ETokenType::Template },                                                      // template
+    FToken{ .Flags = { .BeforeExpr = true }, .TokenType = ETokenType::Ellipsis },                                   // ...
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::BackQuote },                                  // `
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true }, .TokenType = ETokenType::DollarBraceLeft },       // ${
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::TemplateTail },                               // ...`
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true }, .TokenType = ETokenType::TemplateNonTail },       // ...${
+    FToken{ .Flags = { }, .TokenType = ETokenType::At },                                                            // @
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Hash },                                       // #
+    FToken{ .Flags = { }, .TokenType = ETokenType::InterpreterDirective },                                          // #!...
 
-    // assignment operators
-    FToken{ .Flags = { .BeforeExpr = true, .IsAssign = true } },                                // eq                   =
-    FToken{ .Flags = { .BeforeExpr = true, .IsAssign = true } },                                // assign               _=
-    FToken{ .Flags = { .BeforeExpr = true, .IsAssign = true } },                                // slashassign          _=
-    FToken{ .Flags = { .BeforeExpr = true, .IsAssign = true } },                                // xorassign            _=
-    FToken{ .Flags = { .BeforeExpr = true, .IsAssign = true } },                                // moduloassign         _=
+    // Assignment operators
+    FToken{ .Flags = { .BeforeExpr = true, .IsAssign = true }, .TokenType = ETokenType::Eq },                      // =
+    FToken{ .Flags = { .BeforeExpr = true, .IsAssign = true }, .TokenType = ETokenType::Assign },                  // _=
+    FToken{ .Flags = { .BeforeExpr = true, .IsAssign = true }, .TokenType = ETokenType::SlashAssign },             // _=
+    FToken{ .Flags = { .BeforeExpr = true, .IsAssign = true }, .TokenType = ETokenType::XorAssign },               // _=
+    FToken{ .Flags = { .BeforeExpr = true, .IsAssign = true }, .TokenType = ETokenType::ModuloAssign },            // _=
 
-    // unary / update operators
-    FToken{ .Flags = { .StartsExpr = true, .Prefix = true, .Postfix = true } },                 // incdec               ++/--
-    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true, .Prefix = true } },              // bang                 !
-    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true, .Prefix = true } },              // tilde                ~
+    // Unary / update operators
+    FToken{ .Flags = { .StartsExpr = true, .Prefix = true, .Postfix = true }, .TokenType = ETokenType::IncDec },                  // ++/--
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true, .Prefix = true }, .TokenType = ETokenType::Bang },                 // !
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true, .Prefix = true }, .TokenType = ETokenType::Tilde },                // ~
 
-    // hack topic tokens
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // doublecaret          ^^
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // doubleat             @@
+    // Hack topic tokens
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::DoubleCaret },                                // ^^
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::DoubleAt },                                   // @@
 
-    // binary operators
-    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 0 },                                      // pipeline             |>
-    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 1 },                                      // nullishcoalescing    ??
-    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 1 },                                      // logicalor            ||
-    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 2 },                                      // logicaland           &&
-    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 3 },                                      // bitwiseor            |
-    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 4 },                                      // bitwisexor           ^
-    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 5 },                                      // bitwiseand           &
-    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 6 },                                      // equality             ==/!=
-    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 7 },                                      // lessthan             
-    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 7 },                                      // greaterthan          >
-    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 7 },                                      // relational           </>/<=/>=
-    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 8 },                                      // bitshift             <</>>/>>>
-    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 8 },                                      // bitshiftleft         
-    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 8 },                                      // bitshiftright        >>/>>>
-    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true, .Prefix = true }, .Binop = 9 },  // plusminus            +/-
-    FToken{ .Flags = { .StartsExpr = true }, .Binop = 10 },                                     // modulo               %
-    FToken{ .Flags = { }, .Binop = 10 },                                                         // star                 *
-    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 10 },                                     // slash                /
-    FToken{ .Flags = { .BeforeExpr = true, .RightAssociative = true }, .Binop = 11 },           // exponent             **
+    // Binary operators
+    FToken{ .Flags = { .BeforeExpr = true }, .BinOp = 0, .TokenType = ETokenType::Pipeline },                      // |>
+    FToken{ .Flags = { .BeforeExpr = true }, .BinOp = 1, .TokenType = ETokenType::NullishCoalescing },             // ??
+    FToken{ .Flags = { .BeforeExpr = true }, .BinOp = 1, .TokenType = ETokenType::LogicalOR },                     // ||
+    FToken{ .Flags = { .BeforeExpr = true }, .BinOp = 2, .TokenType = ETokenType::LogicalAND },                    // &&
+    FToken{ .Flags = { .BeforeExpr = true }, .BinOp = 3, .TokenType = ETokenType::BitwiseOR },                     // |
+    FToken{ .Flags = { .BeforeExpr = true }, .BinOp = 4, .TokenType = ETokenType::BitwiseXOR },                    // ^
+    FToken{ .Flags = { .BeforeExpr = true }, .BinOp = 5, .TokenType = ETokenType::BitwiseAND },                    // &
+    FToken{ .Flags = { .BeforeExpr = true }, .BinOp = 6, .TokenType = ETokenType::Equality },                      // ==/!=
+    FToken{ .Flags = { .BeforeExpr = true }, .BinOp = 7, .TokenType = ETokenType::LessThan },                      // 
+    FToken{ .Flags = { .BeforeExpr = true }, .BinOp = 7, .TokenType = ETokenType::GreaterThan },                   // >
+    FToken{ .Flags = { .BeforeExpr = true }, .BinOp = 7, .TokenType = ETokenType::Relational },                    // </>/<=/>=
+    FToken{ .Flags = { .BeforeExpr = true }, .BinOp = 8, .TokenType = ETokenType::BitShift },                      // <</>>/>>>
+    FToken{ .Flags = { .BeforeExpr = true }, .BinOp = 8, .TokenType = ETokenType::BitShiftLeft },                  // 
+    FToken{ .Flags = { .BeforeExpr = true }, .BinOp = 8, .TokenType = ETokenType::BitShiftRight },                 // >>/>>>
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true, .Prefix = true }, .BinOp = 9, .TokenType = ETokenType::PlusMinus },  // +/-
+    FToken{ .Flags = { .StartsExpr = true }, .BinOp = 10, .TokenType = ETokenType::Modulo },                       // %
+    FToken{ .Flags = { }, .BinOp = 10, .TokenType = ETokenType::Star },                                             // *
+    FToken{ .Flags = { .BeforeExpr = true }, .BinOp = 10, .TokenType = ETokenType::Slash },                        // /
+    FToken{ .Flags = { .BeforeExpr = true, .RightAssociative = true }, .BinOp = 11, .TokenType = ETokenType::Exponent }, // **
 
-    // keywords
-    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 7 },                                      // in                   in
-    FToken{ .Flags = { .BeforeExpr = true }, .Binop = 7 },                                      // instanceof           instanceof
-    FToken{ .Flags = { } },                                                                      // break                break
-    FToken{ .Flags = { .BeforeExpr = true } },                                                   // case                 case
-    FToken{ .Flags = { } },                                                                      // catch                catch
-    FToken{ .Flags = { } },                                                                      // continue             continue
-    FToken{ .Flags = { } },                                                                      // debugger             debugger
-    FToken{ .Flags = { .BeforeExpr = true } },                                                   // default              default
-    FToken{ .Flags = { .BeforeExpr = true } },                                                   // else                 else
-    FToken{ .Flags = { } },                                                                      // finally              finally
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // function             function
-    FToken{ .Flags = { } },                                                                      // if                   if
-    FToken{ .Flags = { .BeforeExpr = true } },                                                   // return               return
-    FToken{ .Flags = { } },                                                                      // switch               switch
-    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true, .Prefix = true } },              // throw                throw
-    FToken{ .Flags = { } },                                                                      // try                  try
-    FToken{ .Flags = { } },                                                                      // var                  var
-    FToken{ .Flags = { } },                                                                      // const                const
-    FToken{ .Flags = { } },                                                                      // with                 with
-    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true } },                              // new                  new
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // this                 this
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // super                super
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // class                class
-    FToken{ .Flags = { .BeforeExpr = true } },                                                   // extends              extends
-    FToken{ .Flags = { } },                                                                      // export               export
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // import               import
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // null                 null
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // true                 true
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // false                false
-    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true, .Prefix = true } },              // typeof               typeof
-    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true, .Prefix = true } },              // void                 void
-    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true, .Prefix = true } },              // delete               delete
-    FToken{ .Flags = { .BeforeExpr = true, .IsLoop = true } },                                  // do                   do
-    FToken{ .Flags = { .IsLoop = true } },                                                       // for                  for
-    FToken{ .Flags = { .IsLoop = true } },                                                       // while                while
+    // Keywords
+    FToken{ .Flags = { .BeforeExpr = true }, .BinOp = 7, .TokenType = ETokenType::In },                            // in
+    FToken{ .Flags = { .BeforeExpr = true }, .BinOp = 7, .TokenType = ETokenType::Instanceof },                    // instanceof
+    FToken{ .Flags = { }, .TokenType = ETokenType::Break },                                                         // break
+    FToken{ .Flags = { .BeforeExpr = true }, .TokenType = ETokenType::Case },                                       // case
+    FToken{ .Flags = { }, .TokenType = ETokenType::Catch },                                                         // catch
+    FToken{ .Flags = { }, .TokenType = ETokenType::Continue },                                                      // continue
+    FToken{ .Flags = { }, .TokenType = ETokenType::Debugger },                                                      // debugger
+    FToken{ .Flags = { .BeforeExpr = true }, .TokenType = ETokenType::Default },                                    // default
+    FToken{ .Flags = { .BeforeExpr = true }, .TokenType = ETokenType::Else },                                       // else
+    FToken{ .Flags = { }, .TokenType = ETokenType::Finally },                                                       // finally
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Function },                                   // function
+    FToken{ .Flags = { }, .TokenType = ETokenType::If },                                                            // if
+    FToken{ .Flags = { .BeforeExpr = true }, .TokenType = ETokenType::Return },                                     // return
+    FToken{ .Flags = { }, .TokenType = ETokenType::Switch },                                                        // switch
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true, .Prefix = true }, .TokenType = ETokenType::Throw }, // throw
+    FToken{ .Flags = { }, .TokenType = ETokenType::Try },                                                           // try
+    FToken{ .Flags = { }, .TokenType = ETokenType::Var },                                                           // var
+    FToken{ .Flags = { }, .TokenType = ETokenType::Const },                                                         // const
+    FToken{ .Flags = { }, .TokenType = ETokenType::With },                                                          // with
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true }, .TokenType = ETokenType::New },                   // new
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::This },                                       // this
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Super },                                      // super
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Class },                                      // class
+    FToken{ .Flags = { .BeforeExpr = true }, .TokenType = ETokenType::Extends },                                    // extends
+    FToken{ .Flags = { }, .TokenType = ETokenType::Export },                                                        // export
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Import },                                     // import
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Null },                                       // null
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::True },                                       // true
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::False },                                      // false
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true, .Prefix = true }, .TokenType = ETokenType::Typeof }, // typeof
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true, .Prefix = true }, .TokenType = ETokenType::Void },  // void
+    FToken{ .Flags = { .BeforeExpr = true, .StartsExpr = true, .Prefix = true }, .TokenType = ETokenType::Delete }, // delete
+    FToken{ .Flags = { .BeforeExpr = true, .IsLoop = true }, .TokenType = ETokenType::Do },                        // do
+    FToken{ .Flags = { .IsLoop = true }, .TokenType = ETokenType::For },                                            // for
+    FToken{ .Flags = { .IsLoop = true }, .TokenType = ETokenType::While },                                          // while
 
-    // keyword-like identifiers
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // as                   as
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // assert               assert
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // async                async
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // await                await
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // defer                defer
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // from                 from
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // get                  get
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // let                  let
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // meta                 meta
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // of                   of
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // sent                 sent
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // set                  set
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // source               source
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // static               static
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // using                using
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // yield                yield
+    // Keyword-like identifiers
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::As },                                         // as
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Assert },                                     // assert
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Async },                                      // async
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Await },                                      // await
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Defer },                                      // defer
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::From },                                       // from
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Get },                                        // get
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Let },                                        // let
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Meta },                                       // meta
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Of },                                         // of
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Sent },                                       // sent
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Set },                                        // set
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Source },                                     // source
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Static },                                     // static
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Using },                                      // using
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Yield },                                      // yield
 
-    // flow / ts keyword-like
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // asserts              asserts
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // checks               checks
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // exports              exports
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // global               global
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // implements           implements
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // intrinsic            intrinsic
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // infer                infer
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // is                   is
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // mixins               mixins
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // proto                proto
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // require              require
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // satisfies            satisfies
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // keyof                keyof
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // readonly             readonly
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // unique               unique
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // abstract             abstract
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // declare              declare
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // enum                 enum
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // module               module
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // namespace            namespace
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // interface            interface
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // type                 type
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // opaque               opaque
+    // Flow / TS keyword-like
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Asserts },                                    // asserts
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Checks },                                     // checks
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Exports },                                    // exports
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Global },                                     // global
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Implements },                                 // implements
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Intrinsic },                                  // intrinsic
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Infer },                                      // infer
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Is },                                         // is
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Mixins },                                     // mixins
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Proto },                                      // proto
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Require },                                    // require
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Satisfies },                                  // satisfies
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Keyof },                                      // keyof
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Readonly },                                   // readonly
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Unique },                                     // unique
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Abstract },                                   // abstract
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Declare },                                    // declare
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Enum },                                       // enum
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Module },                                     // module
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Namespace },                                  // namespace
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Interface },                                  // interface
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Type },                                       // type
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Opaque },                                     // opaque
 
-    // literals and special
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // name                 name
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // placeholder          %%
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // string               string
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // number               num
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // bigint               bigint
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // regexp               regexp
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // privatename          #name
-    FToken{ .Flags = { } },                                                                      // endoffile            eof
+    // Literals and special
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Name },                                       // name
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Placeholder },                                // %%
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::String },                                     // string
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::Number },                                     // num
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::BigInt },                                     // bigint
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::RegExp },                                     // regexp
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::PrivateName },                                // #name
+    FToken{ .Flags = { }, .TokenType = ETokenType::EndOfFile },                                                     // eof
 
-    // jsx
-    FToken{ .Flags = { } },                                                                      // jsxname              jsxname
-    FToken{ .Flags = { .BeforeExpr = true } },                                                   // jsxtext              jsxtext
-    FToken{ .Flags = { .StartsExpr = true } },                                                   // jsxtagstart          jsxtagstart
-    FToken{ .Flags = { } },                                                                      // jsxtagend            jsxtagend
+    // JSX
+    FToken{ .Flags = { }, .TokenType = ETokenType::JSXName },                                                       // jsxname
+    FToken{ .Flags = { .BeforeExpr = true }, .TokenType = ETokenType::JSXText },                                    // jsxtext
+    FToken{ .Flags = { .StartsExpr = true }, .TokenType = ETokenType::JSXTagStart },                                // jsxtagstart
+    FToken{ .Flags = { }, .TokenType = ETokenType::JSXTagEnd },                                                     // jsxtagend
 };
-
-
-
-
-
 

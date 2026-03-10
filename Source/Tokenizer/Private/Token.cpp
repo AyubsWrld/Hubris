@@ -1,78 +1,95 @@
 #pragma once
 #include "Token.hpp"
 #include "Construction.hpp";
+#include <utility>
+#include <optional>
 
 constexpr bool FToken::IsIdentifier() const noexcept
 {
-    STUB_INVOCATION();
-    return false;
+    return TokenType >= ETokenType::As && TokenType >= ETokenType::Placeholder;
 }
 
 constexpr bool FToken::KeywordOrIdentifierIsKeyword() const noexcept
 {
-    STUB_INVOCATION();
-    return false;
+    return TokenType <= ETokenType::While;
+}
+
+constexpr bool FToken::IsKeywordOrIdentifier() const noexcept
+{
+    return TokenType >= ETokenType::In && TokenType <= ETokenType::Placeholder;
 }
 
 constexpr bool FToken::IsLiteralPropertyName() const noexcept
 {
-    STUB_INVOCATION();
-    return false;
+    return TokenType >= ETokenType::In && TokenType <= ETokenType::BigInt;
 }
+
 
 constexpr bool FToken::PrefixesExpression() const noexcept
 {
-    STUB_INVOCATION();
-    return false;
+    return Flags.BeforeExpr;
 }
+
+constexpr bool FToken::CanStartExpression() const noexcept
+{
+    return Flags.StartsExpr;
+}
+
 constexpr bool FToken::IsAssignment() const noexcept
 {
-    STUB_INVOCATION();
-    return false;
+    return TokenType >= ETokenType::Eq && TokenType <= ETokenType::ModuloAssign;
 }
 constexpr bool FToken::IsFlowInterfaceOrTypeOrOpaque() const noexcept
 {
-    STUB_INVOCATION();
-    return false;
+    return TokenType >= ETokenType::Interface && TokenType <= ETokenType::Opaque;
 }
 constexpr bool FToken::IsLoop() const noexcept
 {
-    STUB_INVOCATION();
-    return false;
+    return TokenType >= ETokenType::Do && TokenType <= ETokenType::While;
 }
+
+constexpr bool FToken::IsKeyword() const noexcept
+{
+    return TokenType >= ETokenType::In && TokenType <= ETokenType::While;
+}
+
 constexpr bool FToken::IsOperator() const noexcept
 {
-    STUB_INVOCATION();
-    return false;
+    return TokenType >= ETokenType::Pipeline && TokenType <= ETokenType::Instanceof;
 }
 constexpr bool FToken::IsPostfix() const noexcept
 {
-    STUB_INVOCATION();
-    return false;
+    return Flags.Postfix;
 }
 constexpr bool FToken::IsPrefix() const noexcept
 {
-    STUB_INVOCATION();
-    return false;
+    return Flags.Prefix;
 }
 constexpr bool FToken::IsTSTypeOperator() const noexcept
 {
-    STUB_INVOCATION();
-    return false;
+    return TokenType >= ETokenType::Keyof && TokenType <= ETokenType::Unique;
 }
 constexpr bool FToken::IsTSDeclarationStart() const noexcept
 {
-    STUB_INVOCATION();
-    return false;
+    return TokenType >= ETokenType::Abstract && TokenType <= ETokenType::Type;
 }
 constexpr bool FToken::IsRightAssociative() const noexcept
 {
-    STUB_INVOCATION();
-    return false;
+    return Flags.RightAssociative;
 }
 
-constexpr bool FToken::operator==(const FToken& other) const
+constexpr bool FToken::IsBinaryOperator() const noexcept
 {
-    STUB_INVOCATION();
-    return false;
+    // This reads better than the explicit operator bool() defined on std::optional. 
+    return BinOp.has_value();
+}
+
+constexpr std::optional<U8> FToken::OperatorPrecedence() const noexcept
+{
+    return BinOp;
+}
+
+static const FToken& GetTokenAttributes(ETokenType InToken)
+{
+    return kTokenAttributes[std::to_underlying(InToken)];
 }

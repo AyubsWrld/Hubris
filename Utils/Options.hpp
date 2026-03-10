@@ -1,3 +1,28 @@
+/*
+   ================================================================================================================
+                                                    FILE OVERVIEW
+   ================================================================================================================
+
+   @file:               Options.hpp
+
+   @purpose:            Defines the 
+
+   @token-design:
+
+        The assignment of fine-grained, information-carrying token type objects allows the
+        tokenizer to store contextual information about tokens in a form that is extremely
+        cheap for the parser to query during parsing.
+
+
+   @design:             Token classification is implemented using lightweight constexpr
+
+   @usage:              Tokens are produced by the tokenizer during lexical scanning of
+
+   @notes:              This file does not perform lexical analysis itself. It only defines
+
+   ================================================================================================================
+*/
+
 #pragma once 
 #include <optional>
 #include "ShorthandTypes.hpp"
@@ -11,7 +36,7 @@ enum class ESourceType
     _MAX_
 };
 
-enum class FOptionFlags : U16
+enum class EOptionFlags : U16
 {
     AllowAwaitOutsideFunction = 1u << 0,
     AllowReturnOutsideFunction = 1u << 1,

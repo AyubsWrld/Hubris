@@ -289,6 +289,8 @@ struct FTokenFlags
     U8      : 1;                                        // padding bit.
 };
 
+
+
 struct FToken 
 {
     
@@ -313,24 +315,10 @@ struct FToken
                             bindings, and declarations.
                             noexcept guarantee — does not throw exceptions.
     */
-    
-    constexpr bool IsIdentifier() const noexcept;
-    
-    /*
-    @purpose:               Determines whether the current token is either an identifier
-                            or a keyword that behaves as a reserved word in the grammar.
-    
-    @param:              none
-    
-                                        return
-    
-    @code:               bool            True if the token is a keyword token.
-    
-    @notes:                 Used during parsing to distinguish reserved language
-                            constructs from user-defined identifiers.
-                            noexcept guarantee — does not throw exceptions.
-    */
-    constexpr bool KeywordOrIdentifierIsKeyword() const noexcept;
+    constexpr bool IsIdentifier() const noexcept
+    {
+        return TokenType >= ETokenType::As && TokenType >= ETokenType::Placeholder;
+    }
     
     /*
     @purpose:               Determines whether the current token is either an identifier
@@ -346,7 +334,29 @@ struct FToken
                             constructs from user-defined identifiers.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool IsKeywordOrIdentifier() const noexcept;
+    constexpr bool KeywordOrIdentifierIsKeyword() const noexcept
+    {
+        return TokenType <= ETokenType::While;
+    }
+    
+    /*
+    @purpose:               Determines whether the current token is either an identifier
+                            or a keyword that behaves as a reserved word in the grammar.
+    
+    @param:              none
+    
+                                        return
+    
+    @code:               bool            True if the token is a keyword token.
+    
+    @notes:                 Used during parsing to distinguish reserved language
+                            constructs from user-defined identifiers.
+                            noexcept guarantee — does not throw exceptions.
+    */
+    constexpr bool IsKeywordOrIdentifier() const noexcept
+    {
+        return TokenType >= ETokenType::In && TokenType <= ETokenType::Placeholder;
+    }
 
     /*
     @purpose:               Determines whether the current token may legally appear
@@ -363,7 +373,10 @@ struct FToken
                             and certain keyword-like tokens depending on language rules.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool IsLiteralPropertyName() const noexcept;
+    constexpr bool IsLiteralPropertyName() const noexcept
+    {
+        return TokenType >= ETokenType::In && TokenType <= ETokenType::BigInt;
+    }
     
     /*
     @purpose:               Determines whether the current token acts as a prefix
@@ -379,7 +392,10 @@ struct FToken
                             'delete', and similar unary prefix operators.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool PrefixesExpression() const noexcept;
+    constexpr bool PrefixesExpression() const noexcept
+    {
+        return Flags.BeforeExpr;
+    }
     
     /*
     @purpose:               Determines whether the current token type may legally
@@ -396,7 +412,10 @@ struct FToken
                             parsing may begin.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool CanStartExpression() const noexcept;
+    constexpr bool CanStartExpression() const noexcept
+    {
+        return Flags.StartsExpr;
+    }
     
     /*
     @purpose:               Determines whether the current token represents an
@@ -413,7 +432,10 @@ struct FToken
                             assignment variants depending on tokenizer support.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool IsAssignment() const noexcept;
+    constexpr bool IsAssignment() const noexcept
+    {
+        return TokenType >= ETokenType::Eq && TokenType <= ETokenType::ModuloAssign;
+    }
     
     /*
     @purpose:               Determines whether the current token corresponds to
@@ -429,7 +451,10 @@ struct FToken
     @notes:                 Used in Flow and TypeScript plugin parsing modes.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool IsFlowInterfaceOrTypeOrOpaque() const noexcept;
+    constexpr bool IsFlowInterfaceOrTypeOrOpaque() const noexcept
+    {
+        return TokenType >= ETokenType::Interface && TokenType <= ETokenType::Opaque;
+    }
     
     /*
     @purpose:               Determines whether the token represents a looping
@@ -445,7 +470,10 @@ struct FToken
                             Used to detect loop constructs during statement parsing.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool IsLoop() const noexcept;
+    constexpr bool IsLoop() const noexcept
+    {
+        return TokenType >= ETokenType::Do && TokenType <= ETokenType::While;
+    }
 
     /*
     @purpose:               Determines whether the token represents a looping
@@ -461,7 +489,10 @@ struct FToken
                             Used to detect loop constructs during statement parsing.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool IsKeyword() const noexcept;
+    constexpr bool IsKeyword() const noexcept
+    {
+        return TokenType >= ETokenType::In && TokenType <= ETokenType::While;
+    }
     
     /*
     @purpose:               Determines whether the current token is classified
@@ -477,7 +508,10 @@ struct FToken
                             Used for expression precedence and parsing logic.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool IsOperator() const noexcept;
+    constexpr bool IsOperator() const noexcept
+    {
+        return TokenType >= ETokenType::Pipeline && TokenType <= ETokenType::Instanceof;
+    }
     
     /*
     @purpose:               Determines whether the current token represents a
@@ -493,7 +527,10 @@ struct FToken
                             an expression.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool IsPostfix() const noexcept;
+    constexpr bool IsPostfix() const noexcept
+    {
+        return Flags.Postfix;
+    }
     
     /*
     @purpose:               Determines whether the current token represents a
@@ -509,7 +546,10 @@ struct FToken
                             and 'delete'.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool IsPrefix() const noexcept;
+    constexpr bool IsPrefix() const noexcept
+    {
+        return Flags.Prefix;
+    }
     
     /*
     @purpose:               Determines whether the token represents a TypeScript
@@ -526,7 +566,10 @@ struct FToken
                             and 'unique'.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool IsTSTypeOperator() const noexcept;
+    constexpr bool IsTSTypeOperator() const noexcept
+    {
+        return TokenType >= ETokenType::Keyof && TokenType <= ETokenType::Unique;
+    }
     
     /*
     @purpose:               Determines whether the token may begin a TypeScript
@@ -543,7 +586,10 @@ struct FToken
                             'enum', 'module', 'namespace', 'interface', and 'type'.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool IsTSDeclarationStart() const noexcept;
+    constexpr bool IsTSDeclarationStart() const noexcept
+    {
+        return TokenType >= ETokenType::Abstract && TokenType <= ETokenType::Type;
+    }
     
     /*
     @purpose:               Determines whether the operator represented by the
@@ -560,7 +606,10 @@ struct FToken
                             left-associative binary operators.
                             noexcept guarantee — does not throw exceptions.
     */
-    constexpr bool IsRightAssociative() const noexcept;
+    constexpr bool IsRightAssociative() const noexcept
+    {
+        return Flags.RightAssociative;
+    }
     
     /*
     @purpose:               Determines whether the operator represented by the
@@ -573,7 +622,10 @@ struct FToken
     @code:               bool            True if the operator is a binary operator.
     
     */
-    constexpr bool IsBinaryOperator() const noexcept;
+    constexpr bool IsBinaryOperator() const noexcept
+    {
+        return BinOp.has_value();
+    }
 
     /*
     @purpose:               Given a binary opeartor return operator precedence 
@@ -592,9 +644,10 @@ struct FToken
                             operator precedence. It is the callers job 
                             to retrieve the value from the optional.
     */
-    
-    constexpr std::optional<U8>  OperatorPrecedence() const noexcept;
-
+    constexpr std::optional<U8> OperatorPrecedence() const noexcept
+    {
+        return BinOp;
+    }
 
     /*
     @purpose:               Determines whether the operator represented by the
@@ -629,8 +682,6 @@ struct FToken
                             and any associated token value.
                             noexcept guarantee — does not throw exceptions.
     */
-
-
     //constexpr bool operator==(const FToken& other) const;
 
 };
